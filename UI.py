@@ -1,12 +1,12 @@
 import os
+from sqlite3 import Time
 import sys
+import random
 from datetime import date, datetime
+from time import sleep
 from typing import List
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QWidget
-
+from PyQt5.QtWidgets import QApplication, QMessageBox, QLabel, QWidget, QPushButton, QVBoxLayout, QFormLayout, QRadioButton, QLineEdit, QCheckBox, QHBoxLayout, QStackedWidget, QListWidget
+from PyQt5 import QtCore
 
 
 def log(description : str, isDev: bool=False):
@@ -83,6 +83,54 @@ def writeOutboundManifest(containers: List):
 
     f.close()
 
+
+class UI(QWidget):
+
+    def __init__(self) -> None:
+
+        super().__init__()
+
+        self.login_page = QWidget()
+        self.selection_page = QWidget()
+
+        self.Stack = QStackedWidget(self)
+        self.Stack.addWidget (self.login_page)
+        self.Stack.addWidget (self.selection_page)
+
+        self.login()
+        self.selection()
+
+        hbox = QHBoxLayout(self)
+        hbox.addWidget(self.Stack)
+
+        self.setLayout(hbox)
+        self.setGeometry(300, 50, 10,10)
+        self.setWindowTitle('Team B')
+        self.show()
+
+    def login(self):
+        layout = QFormLayout()
+        layout.addRow("Name",QLineEdit())
+        layout.addRow("Address",QLineEdit())
+        #self.setTabText(0,"Contact Details")
+        self.login_page.setLayout(layout)
+            
+    def selection(self):
+        layout = QFormLayout()
+        sex = QHBoxLayout()
+        sex.addWidget(QRadioButton("Male"))
+        sex.addWidget(QRadioButton("Female"))
+        layout.addRow(QLabel("Sex"),sex)
+        layout.addRow("Date of Birth",QLineEdit())
+            
+        self.selection_page.setLayout(layout)
+            
+
+    def display(self, widget : QWidget):
+        self.Stack.setCurrentWidget(widget)
+
+
+
 if __name__ == "__main__":
 
     app = QApplication(sys.argv)
@@ -95,15 +143,11 @@ if __name__ == "__main__":
         msgbox.setStandardButtons(QMessageBox.Ok)
         msgbox.exec_()
     else:
-
-        window = QWidget()
-        window.setWindowTitle("Keogh's Yard Portage")
-        window.setGeometry(100, 100, 1600, 900)
-        window.move(60, 15)
-        helloMsg = QLabel('Login', parent=window)
-
-        window.show()
+        ui = UI()
+        ui.resize(800, 600)
+        ui.display(ui.selection_page)
         sys.exit(app.exec_())
+
         
 
 
