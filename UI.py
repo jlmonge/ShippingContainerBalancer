@@ -64,6 +64,24 @@ def parseManifest(manifest_filename : str) -> List:
 
     return containers
  
+def writeOutboundManifest(containers: List):
+
+    path_to_desktop = "{0}\{1}".format(os.environ['USERPROFILE'], 'Desktop')
+    f = open("{0}\{1}".format(path_to_desktop, "manifest_OUTBOUND.txt"), 'w')
+
+    for position, weight, description in containers:
+
+        x = "0{0}".format(position[0]) if len(str(position[0])) == 1 else position[0]
+        y = "0{0}".format(position[1]) if len(str(position[1])) == 1 else position[1]
+        
+        weight = str(weight)
+
+        while len(weight) < 5:
+            weight = "0" + weight
+
+        f.write("[{0},{1}], {{{2}}}, {3}\n".format(x, y, weight, description))
+
+    f.close()
 
 if __name__ == "__main__":
 
