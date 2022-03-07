@@ -1,6 +1,7 @@
-import os
 from sqlite3 import Time
 import sys
+from util import *
+
 from PyQt5.QtWidgets import (
    QApplication,
    QLabel,
@@ -127,9 +128,23 @@ class UI(QWidget):
         testBtn.clicked.connect(self.loginFunc)
         layout.addWidget(testBtn)
         self.animationPage.setLayout(layout)
- 
-if __name__ == '__main__':
-   app = QApplication(sys.argv)
-   ui = UI()
-   ui.show()
-   sys.exit(app.exec_())
+
+
+
+
+if __name__ == "__main__":
+
+    app = QApplication(sys.argv)
+
+    if not sys.platform.startswith('win32'):
+        msgbox = QMessageBox()
+        msgbox.setIcon(QMessageBox.Critical)
+        msgbox.setText("Incompatible Operating System")
+        msgbox.setWindowTitle("Error")
+        msgbox.setStandardButtons(QMessageBox.Ok)
+        msgbox.exec_()
+    else:
+        ui = UI()
+        ui.resize(800, 600)
+        ui.show()
+        sys.exit(app.exec_())
