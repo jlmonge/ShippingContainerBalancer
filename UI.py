@@ -62,18 +62,25 @@ class UI(QWidget):
         self.widgetStack.addWidget(self.loadPage)
         self.widgetStack.addWidget(self.progressPage)
         self.widgetStack.addWidget(self.animationPage)
-   
+
+        layout =  QVBoxLayout()
+        layout.addWidget(self.widgetStack)
+        self.setLayout(layout)
+
         self.loginFunc()
  
        #start at the login page
 
     def loginFunc(self):
-        print("login test")
+
         self.widgetStack.setCurrentIndex(0)
+
         layout = QFormLayout()
-        layout.addRow("Name",QLineEdit())
+        layout.addRow("Name", QLineEdit())
+
         loginBtn = QPushButton('Login')
         loginBtn.setStyleSheet("min-width: 10em;")
+
         layout.addWidget(loginBtn)
  
         loginBtn.clicked.connect(self.menuFunc)
@@ -82,6 +89,7 @@ class UI(QWidget):
     def menuFunc(self):
         self.widgetStack.setCurrentIndex(1)
         layout = QGridLayout()
+
         loginBtn = QPushButton('Login')
         loginBtn.clicked.connect(self.loginFunc)
         balanceBtn = QPushButton('Balance')
@@ -102,8 +110,9 @@ class UI(QWidget):
         layout.addWidget(balanceBtn)
         layout.addWidget(loadBtn)
         layout.addWidget(contBtn)
- 
+
         self.menuPage.setLayout(layout)
+ 
    
     def loadFunc(self):
         self.widgetStack.setCurrentIndex(2)
