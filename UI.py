@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import (
    QHBoxLayout,
    QRadioButton,
    QMessageBox,
-   QSizePolicy
+   QFileDialog
 )
 
 from PyQt5.QtCore import Qt
@@ -51,7 +51,6 @@ class UI(QWidget):
         self.height = 576
         self.setWindowTitle(self.title)
         self.setFixedSize(self.width, self.height)
-        self.setWindowIcon(QIcon("icon.png"))
        
         # pages config
         self.loginPage = QWidget()
@@ -60,6 +59,8 @@ class UI(QWidget):
         self.progressPage = QWidget()
         self.animationPage = QWidget()
         self.widgetStack = QStackedWidget(self)
+        self.widgetStack.setFixedSize(self.width, self.height)
+        
         self.widgetStack.addWidget(self.loginPage)
         self.widgetStack.addWidget(self.menuPage)
         self.widgetStack.addWidget(self.loadPage)
@@ -73,12 +74,11 @@ class UI(QWidget):
         self.loginFunc()
  
        #start at the login page
-
+ 
     def loginFunc(self):
-
         self.widgetStack.setCurrentIndex(0)
 
-        layout = QFormLayout()
+        layout = QFormLayout(self.loginPage)
         layout.setAlignment(Qt.AlignCenter)
         layout.setContentsMargins(370, 200, 0, 0)
 
@@ -89,33 +89,29 @@ class UI(QWidget):
 
         loginBtn = QPushButton('Login')
         loginBtn.setMaximumWidth(100)
-
         layout.addWidget(loginBtn)
 
-
         loginBtn.clicked.connect(self.menuFunc)
-        
-        self.loginPage.setLayout(layout)
  
     def menuFunc(self):
         self.widgetStack.setCurrentIndex(1)
-        layout = QFormLayout()
+        layout = QGridLayout(self.menuPage)
 
         loginBtn = QPushButton('Login')
         loginBtn.clicked.connect(self.loginFunc)
         balanceBtn = QPushButton('Balance')
         balanceBtn.clicked.connect(self.progressFunc)
-        loadBtn = QPushButton('Load/Unload')
+        loadBtn = QPushButton('Onload/Offload')
         loadBtn.clicked.connect(self.loadFunc)
         contBtn = QPushButton('Continue')
-        contBtn.clicked.connect(self.animationFunc)
+        contBtn.clicked.connect(self.contFunc)
 
-        #'''
-        loginBtn.setStyleSheet("min-width: 20em;")
-        balanceBtn.setStyleSheet("min-width: 20em;")
-        loadBtn.setStyleSheet("min-width: 20em;")
-        contBtn.setStyleSheet("min-width: 20em;")
-        #'''
+        '''
+        loginBtn.setStyleSheet("min-height: 5em;")
+        balanceBtn.setStyleSheet("min-height: 5em;")
+        loadBtn.setStyleSheet("min-height: 5em;")
+        contBtn.setStyleSheet("min-height: 5em;")
+        '''
 
         loginBtn.setMaximumWidth(100)
         balanceBtn.setMaximumWidth(100)
@@ -129,34 +125,33 @@ class UI(QWidget):
         layout.addWidget(loadBtn)
         layout.addWidget(contBtn)
 
-        self.menuPage.setLayout(layout)
- 
-   
     def loadFunc(self):
+        fileName = QFileDialog.getOpenFileName(self, "Open File", "C:\\", "Text files (*.txt)")
+        #positions = parseManifest(filename)
         self.widgetStack.setCurrentIndex(2)
-        layout = QGridLayout()
+        layout = QGridLayout(self.loadPage)
         testBtn = QPushButton('load')
         testBtn.clicked.connect(self.loginFunc)
         layout.addWidget(testBtn)
-        self.loadPage.setLayout(layout)
    
     def progressFunc(self):
+        fileName = QFileDialog.getOpenFileName(self, "Open File", "C:\\", "Text files (*.txt)")
+        #positions = parseManifest(filename)
         self.widgetStack.setCurrentIndex(3)
-        layout = QGridLayout()
+        layout = QGridLayout(self.progressPage)
         testBtn = QPushButton('progress')
         testBtn.clicked.connect(self.loginFunc)
         layout.addWidget(testBtn)
-        self.progressPage.setLayout(layout)
 
     def animationFunc(self):
+        print("animation")
+   
+    def contFunc(self):
         self.widgetStack.setCurrentIndex(4)
-        layout = QGridLayout()
+        layout = QGridLayout(self.animationPage)
         testBtn = QPushButton('test')
         testBtn.clicked.connect(self.loginFunc)
         layout.addWidget(testBtn)
-        self.animationPage.setLayout(layout)
-
-
 
 
 if __name__ == "__main__":
@@ -172,6 +167,5 @@ if __name__ == "__main__":
         msgbox.exec_()
     else:
         ui = UI()
-        ui.resize(800, 600)
         ui.show()
         sys.exit(app.exec_())
