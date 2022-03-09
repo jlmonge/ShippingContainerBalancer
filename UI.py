@@ -1,3 +1,4 @@
+from cgitb import text
 from sqlite3 import Time
 import sys
 from util import *
@@ -19,6 +20,8 @@ from PyQt5.QtWidgets import (
    QMessageBox,
    QSizePolicy
 )
+
+from PyQt5.QtCore import Qt
  
 from PyQt5.QtGui import QIcon
  
@@ -62,26 +65,42 @@ class UI(QWidget):
         self.widgetStack.addWidget(self.loadPage)
         self.widgetStack.addWidget(self.progressPage)
         self.widgetStack.addWidget(self.animationPage)
-   
+
+        layout =  QVBoxLayout()
+        layout.addWidget(self.widgetStack)
+        self.setLayout(layout)
+
         self.loginFunc()
  
        #start at the login page
 
     def loginFunc(self):
-        print("login test")
+
         self.widgetStack.setCurrentIndex(0)
+
         layout = QFormLayout()
-        layout.addRow("Name",QLineEdit())
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setContentsMargins(370, 200, 0, 0)
+
+        textfield = QLineEdit()
+        textfield.setMaximumWidth(200)
+        textfield.setMinimumHeight(25)
+        layout.addRow("Name",textfield)
+
         loginBtn = QPushButton('Login')
-        loginBtn.setStyleSheet("min-width: 10em;")
+        loginBtn.setMaximumWidth(100)
+
         layout.addWidget(loginBtn)
- 
+
+
         loginBtn.clicked.connect(self.menuFunc)
+        
         self.loginPage.setLayout(layout)
  
     def menuFunc(self):
         self.widgetStack.setCurrentIndex(1)
-        layout = QGridLayout()
+        layout = QFormLayout()
+
         loginBtn = QPushButton('Login')
         loginBtn.clicked.connect(self.loginFunc)
         balanceBtn = QPushButton('Balance')
@@ -97,13 +116,21 @@ class UI(QWidget):
         loadBtn.setStyleSheet("min-width: 20em;")
         contBtn.setStyleSheet("min-width: 20em;")
         #'''
+
+        loginBtn.setMaximumWidth(100)
+        balanceBtn.setMaximumWidth(100)
+        loadBtn.setMaximumWidth(100)
+        contBtn.setMaximumWidth(100)
+        loginBtn.setContentsMargins(0, 5, 0, 0)
+        layout.setContentsMargins(360,180,0,0)
    
         layout.addWidget(loginBtn)
         layout.addWidget(balanceBtn)
         layout.addWidget(loadBtn)
         layout.addWidget(contBtn)
- 
+
         self.menuPage.setLayout(layout)
+ 
    
     def loadFunc(self):
         self.widgetStack.setCurrentIndex(2)
