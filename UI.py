@@ -125,8 +125,9 @@ class UI(QWidget):
             layout.addWidget(loginBtn)
 
             loginBtn.clicked.connect(self.menuFunc)
+            loginBtn.clicked.connect(lambda: log(textfield.text() + " has logged in."))
             self.loginLayoutSet == True
- 
+
     def menuFunc(self):
         self.widgetStack.setCurrentIndex(1)
         if (self.menuLayoutSet == False):
@@ -146,7 +147,6 @@ class UI(QWidget):
             loadBtn.setMaximumWidth(100)
             contBtn.setMaximumWidth(100)
             loginBtn.setContentsMargins(0, 5, 0, 0)
-            layout.setContentsMargins(360,180,0,0)
    
             layout.addWidget(loginBtn)
             layout.addWidget(balanceBtn)
