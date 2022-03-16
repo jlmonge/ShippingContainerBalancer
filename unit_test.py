@@ -76,7 +76,25 @@ def test_get_heuristic():
     test_ship = Ship()
     test_ship.from_manifest('ShipCase4.txt')
     test_ship.calculate_weight_left_right_sides_of_ship()
-    assert test_ship.get_heuristic() > 0
+    assert test_ship.get_heuristic_balance() > 0
+
+def test_find_container():
+    test_ship = Ship()
+    test_ship.from_manifest('ShipCase4.txt')
+    container_found = test_ship.find_container(1100,'Doe')
+    print(container_found)
+    assert container_found.weight == 1100
+    assert container_found.description == 'Doe'
+    assert container_found.row == 6
+    assert container_found.column == 4
+
+def test_balance_ship():
+    test_ship = Ship()
+    test_ship.from_manifest('ShipCase1.txt')
+    solution = balance_ship(test_ship)
+    print(solution.ship)
+
+
 
 
 

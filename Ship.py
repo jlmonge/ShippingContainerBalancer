@@ -79,14 +79,11 @@ class Ship:
             for j in range(len(list_of_containers[i])):
                 container = list_of_containers[i][j]
                 if not container.is_unused() and not container.is_invalid():
-                    list_to_be_sorted.append(container)
+                    list_to_be_sorted.append(copy.deepcopy(container))
 
+        list_to_be_sorted.sort()
+        return list_to_be_sorted
 
-
-
-        sorted_list = copy.deepcopy(list_to_be_sorted)
-        sorted_list.sort()
-        return sorted_list
     #problem: currently sorted list is a full half of ship include nan/unused containers
     def get_container_in_sorted_list_with_weight_lte_threshold(self,sorted_container_list_ltg, threshold):
         for i in range((len(sorted_container_list_ltg)-1), -1, -1):   # count down from last index to 0
@@ -141,6 +138,15 @@ class Ship:
 
         self.setup_top_available_container_row_indexes()
         file.close()
+
+    def get_list_columns_not_full(self):
+        list_of_columns_not_full = []
+        for column_index in range(len(self.top_available_container_row_indexes)):
+            if self.top_available_container_row_indexes[column_index] != -1 \
+                    and self.top_available_container_row_indexes[column_index] <= self.height - 1:
+
+                list_of_columns_not_full.append(column_index)
+        return list_of_columns_not_full
 
     def to_manifest(self,file_path):
         file = open(file_path,"w")
@@ -212,6 +218,17 @@ class Ship:
             raise Exception("column moved from is same column as moved to")
         self.place_container(column_container_moved_to, self.lift_container(column_of_container_to_move))
 
+    #test this
+    def is_column_empty(self,column):
+        if self.top_available_container_row_indexes[column] == -1:
+            return False
+        elif self.top_available_container_row_indexes[column] == 0:
+            return True
+        elif self.containers[int(self.top_available_container_row_indexes[column] - 1)][column].is_invalid():
+            return True
+        else:
+            return False
+
 
     def swap_containers_in_ship(self,row1, column1, row2, column2):
         # Only allow swapping of two valid containers, so we don't have to worry about updating container indexes
@@ -246,6 +263,32 @@ class Ship:
 
         raise Exception("No available centermost column found! is_left_side: " + str(is_left_side))
 
+    def calculate_manhattan_distance_of_move(self,start_row,start_column,desired_row,desired_column):
+        spaces_moved = 0
+        current_row = start_row
+        current_column = start_column
+        if start_column < desired_column:
+            while(current_column != desired_column):
+                if(current_row > int(self.height-1) or self.containers[current_row][current_column + 1].is_unused()):
+                    current_column += 1
+                    spaces_moved += 1
+                else:
+                    current_row += 1
+                    spaces_moved += 1
+            spaces_moved += (current_row - desired_row)
+        else:
+            while(current_column != desired_column):
+                if(current_row > int(self.height-1) or self.containers[current_row][current_column - 1].is_unused()):
+                    current_column -= 1
+                    spaces_moved += 1
+                else:
+                    current_row += 1
+                    spaces_moved += 1
+            spaces_moved += (current_row - desired_row)
+
+        return spaces_moved
+
+
     def get_list_half_of_ship(self,is_left_side):
         if(is_left_side):
             np_array_containers = np.array(self.containers)
@@ -257,12 +300,14 @@ class Ship:
         list_one_side = np.ndarray.tolist(nparray_sliced)
         return list_one_side
 
-    def get_heuristic(self):
+    def get_heuristic_balance(self):
+        self.calculate_weight_left_right_sides_of_ship()
         remaining_deficit = self.get_balance_deficit()
-        if self.is_left_side_heavier():
+
+        is_left_side_heavier = self.is_left_side_heavier()
+        if is_left_side_heavier:
             list_to_sort = self.get_list_half_of_ship(1)
         else:
-
             list_to_sort = self.get_list_half_of_ship(0)
 
         sorted_heavier_side = self.get_sorted_container_list_least_to_greatest(list_to_sort)
@@ -279,21 +324,31 @@ class Ship:
             except Exception:
                 break
 
-            # if this container is not on the top of its column in ship_copy
-            row_index_of_top_container_in_column = copy_of_ship.top_available_container_row_indexes[container_to_move.column] - 1
+            if (copy_of_ship.top_available_container_row_indexes[container_to_move.column] == -1):
+                row_of_top_container_in_column = self.height-1
+            else:
+                row_of_top_container_in_column = copy_of_ship.top_available_container_row_indexes[container_to_move.column] - 1
 
-            if ((container_to_move.row != self.height - 1)
-                and (container_to_move.row != row_index_of_top_container_in_column)):
+            # if this container is not on the top of its column in ship_copy
+            if (container_to_move.row != row_of_top_container_in_column):
+
                 # call swap on ship_copy with the container on top of its column, so it will go to top
-                copy_of_ship.swap_containers_in_ship(container_to_move.row,container_to_move.column,
-                                                     row_index_of_top_container_in_column, container_to_move.column)
+                copy_of_ship.swap_containers_in_ship(container_to_move.row, container_to_move.column,
+                                                     row_of_top_container_in_column, container_to_move.column)
+
+                # In sorted_heavier_side, update row of the container that was swapped off the top of the column.
+                # (The container that was swapped to the top will get removed, so no need to manually update it)
+                for container in sorted_heavier_side:
+                    if (container.column == container_to_move.column) and (container.row == row_of_top_container_in_column):
+                        container.row = container_to_move.row
+                        break
 
             #     subtract this container weight from deficit variable
             remaining_deficit -= container_to_move.weight
 
             #     call move_container to move this container to other side of ship_copy
-            is_left_side = (container_to_move.column < (copy_of_ship.width/2 - 1))
-            available_column = copy_of_ship.get_centermost_available_column(is_left_side)
+            is_left_side = (container_to_move.column < (copy_of_ship.width/2))
+            available_column = copy_of_ship.get_centermost_available_column(not is_left_side)
             copy_of_ship.move_container(container_to_move.column,available_column)
 
             # Add the horizontal distance moved to the heuristic0
@@ -304,6 +359,40 @@ class Ship:
 
         # heuristic is the sum variable that we incremented in the while loop
         return heuristic_sum
+
+    def get_leftmost_available_column(self):
+        for column_index in range(len(self.top_available_container_row_indexes)):
+            if self.top_available_container_row_indexes[column_index] != -1 \
+                    and self.top_available_container_row_indexes[column_index] <= self.height - 1:
+                return column_index
+        return -1
+
+    def onload_container(self,container):
+        available_column_for_container = self.get_leftmost_available_column()
+
+        if(available_column_for_container == -1):
+            raise Exception('ship is full, no available column found')
+
+        self.place_container(available_column_for_container,container)
+        if available_column_for_container < int(self.width/2):
+            self.weight += container.weight
+
+    def offload_container_from_top_of_column(self,column_of_container_to_offload):
+        lifted_container = self.lift_container(column_of_container_to_offload)
+        self.weight -= lifted_container.weight
+        return lifted_container
+
+    def find_container(self,container_weight,container_description):
+        for i in range(len(self.containers)):
+            for j in range(len(self.containers[i])):
+                if not self.containers[i][j].is_unused() and not self.containers[i][j].is_invalid():
+                    if self.containers[i][j].weight == container_weight and self.containers[i][j].description == container_description:
+                        return self.containers[i][j]
+        raise Exception('container not found in ship')
+
+    def get_heuristic_onload_offload(self):
+
+        return
 
     def __repr__(self):
 
