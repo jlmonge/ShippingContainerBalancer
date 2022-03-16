@@ -75,21 +75,21 @@ class UI(QWidget):
         layout0 = QFormLayout(self.loginPage)
         textfield = QLineEdit()
         layout0.addRow("Name", textfield)
-        loginBtn = QPushButton('Login')
-        layout0.addWidget(loginBtn)
-        loginBtn.clicked.connect(lambda: self.getName(textfield))
+        loginBtn0 = QPushButton('Login', enabled=False)
+        layout0.addWidget(loginBtn0)
+        loginBtn0.clicked.connect(lambda: self.getName(textfield))
 
         self.menuPage = QWidget()
         layout1 = QGridLayout(self.menuPage)
-        loginBtn = QPushButton('Login')
-        loginBtn.clicked.connect(self.loginFunc)
+        loginBtn1 = QPushButton('Login')
+        loginBtn1.clicked.connect(lambda: self.loginFunc(textfield, loginBtn0))
         loadBtn = QPushButton('Onload/Offload')
         loadBtn.clicked.connect(lambda: self.uploadHelper(jobType=0))
         balanceBtn = QPushButton('Balance')
         balanceBtn.clicked.connect(lambda: self.uploadHelper(jobType=1, progBar=progBar, progBtn=progBtn))
-        contBtn = QPushButton('Continue')
+        contBtn = QPushButton('Continue', enabled=False)
         contBtn.clicked.connect(lambda: self.animationFunc(cont=self.cont))
-        layout1.addWidget(loginBtn)
+        layout1.addWidget(loginBtn1)
         layout1.addWidget(loadBtn)
         layout1.addWidget(balanceBtn)
         layout1.addWidget(contBtn)
@@ -126,7 +126,7 @@ class UI(QWidget):
         self.widgetStack.addWidget(self.animationPage)  #4
         self.widgetStack.addWidget(self.completePage)   #5
 
-        self.loginFunc()
+        self.loginFunc(textfield, loginBtn0)
  
        #start at the login page
  
@@ -142,8 +142,10 @@ class UI(QWidget):
             else:
                 self.calcFunc(jobType=jobType, progBar=progBar, progBtn=progBtn)
 
-    def loginFunc(self):
+    def loginFunc(self, textfield, loginBtn):
         self.widgetStack.setCurrentIndex(0)
+        textfield.textChanged[str].connect(lambda: loginBtn.setEnabled(textfield.text() != ""))
+        
     
     def getName(self, textfield):
         name = textfield.text()
