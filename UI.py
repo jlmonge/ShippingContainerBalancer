@@ -270,8 +270,8 @@ class UI(QWidget):
    
     def progressFunc(self):
         fileName = QFileDialog.getOpenFileName(self, "Open File", os.getenv('HOME'), "Text files (*.txt)")
-        #if (fileName != ""):
-            #positions = parseManifest(filename)
+        containers = parseManifest(fileName[0].rsplit('/', 1)[1])
+
         self.widgetStack.setCurrentIndex(3)
         if (self.progressLayoutSet == False):
             layout = QGridLayout(self.progressPage)
