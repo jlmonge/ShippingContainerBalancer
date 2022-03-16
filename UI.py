@@ -133,8 +133,10 @@ class UI(QWidget):
     def uploadHelper(self, jobType, progBar=None, progBtn=None):
         fileName = QFileDialog.getOpenFileName(self, "Open File", "C:\\", "Text files (*.txt)")[0]
         if fileName:
-            #positions = parseManifest(fileName)
-            #print(positions)
+            print(fileName)
+            positions = parseManifest(fileName)
+            for i in positions:
+                print(i)
             if jobType == 0:
                 self.loadFunc()
             else:
