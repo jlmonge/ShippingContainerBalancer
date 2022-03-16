@@ -2,7 +2,6 @@ from cgitb import text
 from sqlite3 import Time
 import sys
 from util import *
-import grid
 
 from PyQt5.QtWidgets import (
    QApplication,
@@ -53,12 +52,10 @@ app = QApplication(sys.argv)
  
 class UI(QWidget):
 
-    #globals to be used by load page
-    onloadListNames = []
-    onloadListWts = []
+    #keep him global for use in multiple functions
     loadRScrollBox = QListWidget()
 
-    #bools! let's not have any memory leaks now
+    #bools! let's not reassign stuff
     loginLayoutSet = False
     menuLayoutSet = False
     loadLayoutSet = False
@@ -163,6 +160,10 @@ class UI(QWidget):
         contBtn.setStyleSheet("min-height: 5em;")
         '''
 
+    #globals to be used by load page
+    onloadListNames = []
+    onloadListWts = []
+
     def computeConfirmPopup(self):
         msg = QMessageBox()
         msg.setWindowTitle("Confirmation")
@@ -236,7 +237,9 @@ class UI(QWidget):
             theCenter = QVBoxLayout() #grid and title of page
             theCenter.addWidget(QLabel("Unload"), 1, Qt.AlignHCenter)
             theGrid = QGridLayout()
-            #Get grid from grid.py
+            #--------------------------------------------------
+            #TODO: Create grid with Containers
+            #--------------------------------------------------
             theCenter.addLayout(theGrid, 18)
             theCenter.addWidget(QWidget(), 1)
         
