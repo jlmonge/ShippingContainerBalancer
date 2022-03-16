@@ -270,7 +270,7 @@ class UI(QWidget):
    
     def progressFunc(self):
         fileName = QFileDialog.getOpenFileName(self, "Open File", os.getenv('HOME'), "Text files (*.txt)")
-        if (fileName != ""):
+        #if (fileName != ""):
             #positions = parseManifest(filename)
         self.widgetStack.setCurrentIndex(3)
         if (self.progressLayoutSet == False):
