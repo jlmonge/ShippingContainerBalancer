@@ -2,6 +2,7 @@ from cgitb import text
 from sqlite3 import Time
 import sys
 from util import *
+import grid
 
 from PyQt5.QtWidgets import (
    QApplication,
@@ -52,8 +53,17 @@ app = QApplication(sys.argv)
  
 class UI(QWidget):
 
-    #keep him global for use in other functions
+    #globals to be used by load page
+    onloadListNames = []
+    onloadListWts = []
     loadRScrollBox = QListWidget()
+
+    #bools! let's not have any memory leaks now
+    loginLayoutSet = False
+    menuLayoutSet = False
+    loadLayoutSet = False
+    progressLayoutSet = False
+    animationLayoutSet = False
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -102,57 +112,56 @@ class UI(QWidget):
         
     def loginFunc(self):
         self.widgetStack.setCurrentIndex(0)
+        if (self.loginLayoutSet == False):
 
-        layout = QFormLayout(self.loginPage)
-        layout.setAlignment(Qt.AlignCenter)
-        layout.setContentsMargins(370, 200, 0, 0)
+            layout = QFormLayout(self.loginPage)
+            layout.setAlignment(Qt.AlignCenter)
+            layout.setContentsMargins(370, 200, 0, 0)
 
-        textfield = QLineEdit()
-        textfield.setMaximumWidth(200)
-        textfield.setMinimumHeight(25)
-        layout.addRow("Name",textfield)
+            textfield = QLineEdit()
+            textfield.setMaximumWidth(200)
+            textfield.setMinimumHeight(25)
+            layout.addRow("Name",textfield)
 
-        loginBtn = QPushButton('Login')
-        loginBtn.setMaximumWidth(100)
-        layout.addWidget(loginBtn)
+            loginBtn = QPushButton('Login')
+            loginBtn.setMaximumWidth(100)
+            layout.addWidget(loginBtn)
 
-        loginBtn.clicked.connect(self.menuFunc)
+            loginBtn.clicked.connect(self.menuFunc)
+            self.loginLayoutSet == True
  
     def menuFunc(self):
         self.widgetStack.setCurrentIndex(1)
-        layout = QGridLayout(self.menuPage)
+        if (self.menuLayoutSet == False):
+            layout = QGridLayout(self.menuPage)
 
-        loginBtn = QPushButton('Login')
-        loginBtn.clicked.connect(self.loginFunc)
-        balanceBtn = QPushButton('Balance')
-        balanceBtn.clicked.connect(self.progressFunc)
-        loadBtn = QPushButton('Onload/Offload')
-        loadBtn.clicked.connect(self.loadFunc)
-        contBtn = QPushButton('Continue')
-        contBtn.clicked.connect(self.contFunc)
+            loginBtn = QPushButton('Login')
+            loginBtn.clicked.connect(self.loginFunc)
+            balanceBtn = QPushButton('Balance')
+            balanceBtn.clicked.connect(self.progressFunc)
+            loadBtn = QPushButton('Onload/Offload')
+            loadBtn.clicked.connect(self.loadFunc)
+            contBtn = QPushButton('Continue')
+            contBtn.clicked.connect(self.contFunc)
 
+            loginBtn.setMaximumWidth(100)
+            balanceBtn.setMaximumWidth(100)
+            loadBtn.setMaximumWidth(100)
+            contBtn.setMaximumWidth(100)
+            loginBtn.setContentsMargins(0, 5, 0, 0)
+            layout.setContentsMargins(360,180,0,0)
+   
+            layout.addWidget(loginBtn)
+            layout.addWidget(balanceBtn)
+            layout.addWidget(loadBtn)
+            layout.addWidget(contBtn)
+            self.menuLayoutSet == True
         '''
         loginBtn.setStyleSheet("min-height: 5em;")
         balanceBtn.setStyleSheet("min-height: 5em;")
         loadBtn.setStyleSheet("min-height: 5em;")
         contBtn.setStyleSheet("min-height: 5em;")
         '''
-
-        loginBtn.setMaximumWidth(100)
-        balanceBtn.setMaximumWidth(100)
-        loadBtn.setMaximumWidth(100)
-        contBtn.setMaximumWidth(100)
-        loginBtn.setContentsMargins(0, 5, 0, 0)
-        layout.setContentsMargins(360,180,0,0)
-   
-        layout.addWidget(loginBtn)
-        layout.addWidget(balanceBtn)
-        layout.addWidget(loadBtn)
-        layout.addWidget(contBtn)
-
-    #globals to be used by load page
-    onloadListNames = []
-    onloadListWts = []
 
     def computeConfirmPopup(self):
         msg = QMessageBox()
@@ -202,67 +211,76 @@ class UI(QWidget):
                 #print("List refreshed!", flush = True)
 
     def loadFunc(self):
-        #fileName = QFileDialog.getOpenFileName(self, "Open File", "C:\\", "Text files (*.txt)")
+        #fileName = QFileDialog.getOpenFileName(self, "Open File", os.getenv('HOME'), "Text files (*.txt)")
+        #if (fileName != ""):
+            #positions = parseManifest(filename)
         #positions = parseManifest(filename)
         self.widgetStack.setCurrentIndex(2)
-        layout = QHBoxLayout(self.loadPage)
+        if (self.loadLayoutSet == False):
+            layout = QHBoxLayout(self.loadPage)
         
-        theLeft = QVBoxLayout() #login, back, compute buttons
-        theLeft.addWidget(QWidget(), 4)
-        loginBtn = QPushButton('Login')
-        loginBtn.clicked.connect(self.loginFunc)
-        theLeft.addWidget(loginBtn, 1)
-        backBtn = QPushButton('Back to Menu')
-        backBtn.clicked.connect(self.menuConfirmPopup)
-        theLeft.addWidget(backBtn, 1)
-        theLeft.addWidget(QWidget(), 3)
-        computeBtn = QPushButton('Compute Solution')
-        computeBtn.clicked.connect(self.computeConfirmPopup)
-        theLeft.addWidget(computeBtn, 1)
-        theLeft.addWidget(QWidget(), 10)
+            theLeft = QVBoxLayout() #login, back, compute buttons
+            theLeft.addWidget(QWidget(), 4)
+            loginBtn = QPushButton('Login')
+            loginBtn.clicked.connect(self.loginFunc)
+            theLeft.addWidget(loginBtn, 1)
+            backBtn = QPushButton('Back to Menu')
+            backBtn.clicked.connect(self.menuConfirmPopup)
+            theLeft.addWidget(backBtn, 1)
+            theLeft.addWidget(QWidget(), 3)
+            computeBtn = QPushButton('Compute Solution')
+            computeBtn.clicked.connect(self.computeConfirmPopup)
+            theLeft.addWidget(computeBtn, 1)
+            theLeft.addWidget(QWidget(), 10)
         
-        theCenter = QVBoxLayout() #grid and title of page
-        theCenter.addWidget(QLabel("Unload"), 1, Qt.AlignHCenter)
-        theGrid = QGridLayout()
-        #Get grid from grid.py
-        theCenter.addLayout(theGrid, 18)
-        theCenter.addWidget(QWidget(), 1)
+            theCenter = QVBoxLayout() #grid and title of page
+            theCenter.addWidget(QLabel("Unload"), 1, Qt.AlignHCenter)
+            theGrid = QGridLayout()
+            #Get grid from grid.py
+            theCenter.addLayout(theGrid, 18)
+            theCenter.addWidget(QWidget(), 1)
         
-        theRight = QVBoxLayout() #name and containers to onload
-        theRight.addWidget(QLabel("Hello, User!\nNot you? Please log in"), 2)
-        addOnlBtn = QPushButton('Add container to onload...')
-        addOnlBtn.clicked.connect(self.addToOnloadList)
-        theRight.addWidget(addOnlBtn, 4)
-        theScrollArea = QScrollArea()
-        theScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        theScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        theScrollLayout = QVBoxLayout(theScrollArea)
-        theScrollArea.setWidget(theScrollLayout.widget())
-        loadList = self.loadRScrollBox
-        loadList.itemClicked.connect(self.removeFromOnloadList)
-        theScrollLayout.addWidget(loadList)
-        loadList.update()
-        theRight.addWidget(theScrollArea, 12)
-        theRight.addWidget(QWidget(), 2)
+            theRight = QVBoxLayout() #name and containers to onload
+            theRight.addWidget(QLabel("Hello, User!\nNot you? Please log in"), 2)
+            addOnlBtn = QPushButton('Add container to onload...')
+            addOnlBtn.clicked.connect(self.addToOnloadList)
+            theRight.addWidget(addOnlBtn, 4)
+            theScrollArea = QScrollArea()
+            theScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            theScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            theScrollLayout = QVBoxLayout(theScrollArea)
+            theScrollArea.setWidget(theScrollLayout.widget())
+            loadList = self.loadRScrollBox
+            loadList.itemClicked.connect(self.removeFromOnloadList)
+            theScrollLayout.addWidget(loadList)
+            loadList.update()
+            theRight.addWidget(theScrollArea, 12)
+            theRight.addWidget(QWidget(), 2)
 
-        layout.addLayout(theLeft, 1)
-        layout.addLayout(theCenter, 5)
-        layout.addLayout(theRight, 2)
-        layout.setSpacing(10)
-
-        self.setLayout(layout)
+            layout.addLayout(theLeft, 1)
+            layout.addLayout(theCenter, 5)
+            layout.addLayout(theRight, 2)
+            layout.setSpacing(10)
+ 
+            self.setLayout(layout)
+            self.loadLayoutSet = True
    
     def progressFunc(self):
-        fileName = QFileDialog.getOpenFileName(self, "Open File", "C:\\", "Text files (*.txt)")
-        #positions = parseManifest(filename)
+        fileName = QFileDialog.getOpenFileName(self, "Open File", os.getenv('HOME'), "Text files (*.txt)")
+        if (fileName != ""):
+            #positions = parseManifest(filename)
         self.widgetStack.setCurrentIndex(3)
-        layout = QGridLayout(self.progressPage)
-        testBtn = QPushButton('progress')
-        testBtn.clicked.connect(self.loginFunc)
-        layout.addWidget(testBtn)
+        if (self.progressLayoutSet == False):
+            layout = QGridLayout(self.progressPage)
+            testBtn = QPushButton('progress')
+            testBtn.clicked.connect(self.loginFunc)
+            layout.addWidget(testBtn)
+            self.progressLayoutSet == True
 
     def animationFunc(self):
-        print("animation")
+        if (self.animationLayoutSet == False):
+            print("animation", flush = True)
+            self.animationLayoutSet == True
    
     def contFunc(self):
         self.widgetStack.setCurrentIndex(4)
