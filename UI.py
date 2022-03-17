@@ -98,6 +98,7 @@ class UI(QWidget):
         loginBtn0 = QPushButton('Login', enabled=False)
         layout0.addWidget(loginBtn0)
         loginBtn0.clicked.connect(lambda: self.getName(textfield))
+        loginBtn0.clicked.connect(lambda: log(textfield.text() + " has logged in."))
 
         self.menuPage = QWidget()
         layout1 = QGridLayout(self.menuPage)
