@@ -3,6 +3,7 @@ from sqlite3 import Time
 import sys
 from util import *
 import time
+from grid import Grid
 
 from PyQt5.QtWidgets import (
    QApplication,
@@ -116,10 +117,56 @@ class UI(QWidget):
         layout1.addWidget(contBtn)
 
         self.loadPage = QWidget()
-        layout2 = QGridLayout(self.loadPage)
-        testBtn = QPushButton('Run')
-        testBtn.clicked.connect(lambda: self.calcFunc(jobType=0, progBar=progBar, progBtn=progBtn))
-        layout2.addWidget(testBtn)   
+        layout2 = QHBoxLayout(self.loadPage)
+
+        theLeft = QVBoxLayout() #login, back, compute buttons
+        theLeft.addWidget(QWidget(), 4)
+        loginBtn = QPushButton('Login')
+        loginBtn.clicked.connect(self.loginFunc)
+        theLeft.addWidget(loginBtn, 1)
+        backBtn = QPushButton('Back to Menu')
+        backBtn.clicked.connect(self.menuConfirmPopup)
+        theLeft.addWidget(backBtn, 1)
+        theLeft.addWidget(QWidget(), 3)
+        computeBtn = QPushButton('Compute Solution')
+        computeBtn.clicked.connect(self.computeConfirmPopup)
+        theLeft.addWidget(computeBtn, 1)
+        theLeft.addWidget(QWidget(), 10)
+    
+        theCenter = QVBoxLayout() #grid and title of page
+        
+        unloadLabel = QLabel("Unload")
+        theCenter.addWidget(unloadLabel, Qt.AlignHCenter)
+        theCenter.addWidget(Grid(parseManifest("manifest.txt")))
+
+        theRight = QVBoxLayout() #name and containers to onload
+        theRight.addWidget(QLabel("Hello, User!\nNot you? Please log in"), 2)
+        addOnlBtn = QPushButton('Add container to onload...')
+        addOnlBtn.clicked.connect(self.addToOnloadList)
+        theRight.addWidget(addOnlBtn, 4)
+        theScrollArea = QScrollArea()
+        theScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        theScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        theScrollLayout = QVBoxLayout(theScrollArea)
+        theScrollArea.setWidget(theScrollLayout.widget())
+        loadList = self.loadRScrollBox
+        loadList.itemClicked.connect(self.removeFromOnloadList)
+        theScrollLayout.addWidget(loadList)
+        loadList.update()
+        theRight.addWidget(theScrollArea, 12)
+        theRight.addWidget(QWidget(), 2)
+
+        # testBtn = QPushButton('Run')
+        # testBtn.clicked.connect(lambda: self.calcFunc(jobType=0, progBar=progBar, progBtn=progBtn))
+        # layout2.addWidget(testBtn)   
+        # layout2.addWidget(grid)
+
+
+        layout2.addLayout(theLeft, 1)
+        layout2.addLayout(theCenter, 5)
+        layout2.addLayout(theRight, 2)
+        layout2.setSpacing(10)
+ 
 
         self.animationPage = QWidget()
         layout4 = QGridLayout(self.animationPage)
@@ -279,6 +326,7 @@ class UI(QWidget):
             
 
     def animationFunc(self, cont):
+
         self.widgetStack.setCurrentIndex(4)
 
     def completeFunc(self):
