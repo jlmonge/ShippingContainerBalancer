@@ -8,7 +8,7 @@ from pathlib import Path
 
 list_of_manifests_to_test = ['ShipCase1.txt','ShipCase2.txt','ShipCase3.txt','ShipCase4.txt','ShipCase5.txt']
 
-
+"""
 @pytest.mark.parametrize('manifest_for_testing', list_of_manifests_to_test)
 def test_func_to_manifest_and_from_manifest(manifest_for_testing):
     filepath_of_test_manifest = manifest_for_testing
@@ -87,14 +87,41 @@ def test_find_container():
     assert container_found.description == 'Doe'
     assert container_found.row == 6
     assert container_found.column == 4
-
+"""
 def test_balance_ship():
     test_ship = Ship()
-    test_ship.from_manifest('ShipCase1.txt')
+    test_ship.from_manifest('ShipCaseHeuristic4.txt')
+    test_ship.setup_top_available_container_row_indexes()
+    test_ship.calculate_weight_left_right_sides_of_ship()
     solution = balance_ship(test_ship)
     print(solution.ship)
 
+def test_get_top_containers():
+    test_ship = Ship()
+    test_ship.from_manifest('ShipCase3.txt')
+    test_ship.setup_top_available_container_row_indexes()
+    top_containers = test_ship.get_list_of_top_containers()
+    print(top_containers)
 
 
+def test_get_centermost_container():
+    test_ship = Ship()
+    test_ship.from_manifest('ShipCase2.txt')
+    test_ship.setup_top_available_container_row_indexes()
+    top_containers = test_ship.get_list_of_top_containers()
+    column_left = test_ship.get_centermost_container(1)
+    distance = abs(column_left - test_ship.width/2)
+    column_right = test_ship.get_centermost_container(0)
+    distance_right = abs(column_right - (test_ship.width/2 - 1))
+    #assert column_left ==
+
+
+
+def test_calculate_heuristic():
+    test_ship = Ship()
+    test_ship.from_manifest('ShipCase5.txt')
+    node_for_test = Node(test_ship,0,0)
+    heuristic = node_for_test.calculate_heuristic()
+    print(heuristic)
 
 
