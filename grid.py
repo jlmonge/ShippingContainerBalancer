@@ -16,11 +16,12 @@ class Grid(QTableWidget):
         self.SELECTION_COLOR = QColor(255,228,181)
         self.containers = containers
         self.selectedContainers = set()
+        self.isSelectionEnabled = True
 
         self.setRowCount(self.ROW_SIZE)
         self.setColumnCount(self.COL_SIZE)
-        self.setHorizontalHeaderLabels([ str(i).center(15, ' ') for i in range(1, self.COL_SIZE+1)])
-        self.setVerticalHeaderLabels([str(i).center(3, ' ') for i in range(self.ROW_SIZE, 0, -1)])
+        self.setHorizontalHeaderLabels([ str(i).center(17, ' ') for i in range(1, self.COL_SIZE+1)])
+        self.setVerticalHeaderLabels([str(i).center(6, ' ') for i in range(self.ROW_SIZE, 0, -1)])
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus) # diasbles border highlighting
         self.setSelectionMode(QAbstractItemView.NoSelection)  # disables widget highlighting https://stackoverflow.com/questions/24973378/how-to-disable-selection-highlighting-in-a-qtablewidget
         self.setEditTriggers(QAbstractItemView.NoEditTriggers) # disables editing of cells
@@ -43,6 +44,8 @@ class Grid(QTableWidget):
 
     def onClick(self, item: QTableWidgetItem) -> None:
 
+        if not self.isSelectionEnabled: return
+
         row = self.ROW_SIZE-item.row()
         col = item.column()+1
 
@@ -56,6 +59,9 @@ class Grid(QTableWidget):
             self.selectedContainers.add((row, col))
         
         print(self.getSelectedContainers())
+    
+    def toggleCellSelection(self, status):
+        self.isSelectionEnabled = status
     
     def getSelectedContainers(self) -> List:
 

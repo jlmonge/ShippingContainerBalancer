@@ -5,6 +5,9 @@ from util import *
 import time
 from grid import Grid
 
+from PyQt5.QtWidgets import * 
+from PyQt5.QtGui import * 
+
 from PyQt5.QtWidgets import (
    QApplication,
    QLabel,
@@ -30,7 +33,7 @@ from PyQt5.QtWidgets import (
    QListWidgetItem,
    QListView,
    QFileDialog,
-   QProgressBar
+   QProgressBar,
 )
 
 from PyQt5.QtCore import Qt
@@ -70,8 +73,8 @@ class UI(QWidget):
  
         # window config
         self.title = "Keogh's Yard Portage"
-        self.width = 1024
-        self.height = 576
+        self.width = 1440
+        self.height = 880
         self.setWindowTitle(self.title)
         self.setFixedSize(self.width, self.height)
        
@@ -117,7 +120,9 @@ class UI(QWidget):
         layout1.addWidget(contBtn)
 
         self.loadPage = QWidget()
+        self.loadPage.setMinimumWidth(1300)
         layout2 = QHBoxLayout(self.loadPage)
+    
 
         theLeft = QVBoxLayout() #login, back, compute buttons
         theLeft.addWidget(QWidget(), 4)
@@ -134,10 +139,17 @@ class UI(QWidget):
         theLeft.addWidget(QWidget(), 10)
     
         theCenter = QVBoxLayout() #grid and title of page
-        
+                
         unloadLabel = QLabel("Unload")
-        theCenter.addWidget(unloadLabel, Qt.AlignHCenter)
-        theCenter.addWidget(Grid(parseManifest("manifest.txt")))
+        # unloadLabel.setStyleSheet("QLabel {background-color: red;}")
+        unloadLabel.setFont(QFont('Arial', 30))
+        unloadLabel.setMaximumSize(800,50)
+        unloadLabel.setAlignment(Qt.AlignCenter)
+        theCenter.addWidget(unloadLabel, Qt.AlignCenter)
+
+        grid = Grid(parseManifest("manifest.txt"))
+        grid.setMaximumSize(800, 400)
+        theCenter.addWidget(grid)
 
         theRight = QVBoxLayout() #name and containers to onload
         theRight.addWidget(QLabel("Hello, User!\nNot you? Please log in"), 2)
