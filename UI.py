@@ -59,7 +59,6 @@ class UI(QWidget):
         super().__init__(parent)
  
         # window config
-        print("initing rn")
         self.title = "Keogh's Yard Portage"
         self.width = 1440
         self.height = 880
@@ -93,15 +92,14 @@ class UI(QWidget):
         # main menu
         self.menuPage = QWidget()
         layout0 = QGridLayout(self.menuPage)
-        loginBtn1 = QPushButton('Login')
-        loginBtn1.clicked.connect(self.loginFunc)
+        loginBtn0 = self.loginBtn()
         loadBtn = QPushButton('Onload/Offload')
         loadBtn.clicked.connect(lambda: self.uploadHelper(jobType=0))
         balanceBtn = QPushButton('Balance')
         balanceBtn.clicked.connect(lambda: self.uploadHelper(jobType=1))
         contBtn = QPushButton('Continue', enabled=False)
         contBtn.clicked.connect(lambda: self.animationFunc(cont=self.cont))
-        layout0.addWidget(loginBtn1)
+        layout0.addWidget(loginBtn0)
         layout0.addWidget(loadBtn)
         layout0.addWidget(balanceBtn)
         layout0.addWidget(contBtn)
@@ -112,9 +110,8 @@ class UI(QWidget):
         layout1 = QHBoxLayout(self.loadPage)
         theLeft = QVBoxLayout() #login, back, compute buttons
         theLeft.addWidget(QWidget(), 4)
-        loginBtn = QPushButton('Login')
-        loginBtn.clicked.connect(self.loginFunc)
-        theLeft.addWidget(loginBtn, 1)
+        loginBtn1 = self.loginBtn()
+        theLeft.addWidget(loginBtn1, 1)
         backBtn = QPushButton('Back to Menu')
         backBtn.clicked.connect(self.menuConfirmPopup)
         theLeft.addWidget(backBtn, 1)
@@ -153,9 +150,11 @@ class UI(QWidget):
         # animation page
         self.animationPage = QWidget()
         layout3 = QGridLayout(self.animationPage)
-        testBtn = QPushButton('Complete operation')
-        testBtn.clicked.connect(self.completeFunc)
-        layout3.addWidget(testBtn)
+        loginBtn3 = self.loginBtn()
+        opBtn = QPushButton('Complete operation')
+        opBtn.clicked.connect(self.completeFunc) # change completeFunc to progress anim when this is clicked
+        layout3.addWidget(loginBtn3)
+        layout3.addWidget(opBtn)
 
         # job completion page
         self.completePage = QWidget()
@@ -180,6 +179,11 @@ class UI(QWidget):
         # go to the login page
         self.loginFunc()
 
+    def loginBtn(self):
+        btn = QPushButton('Login')
+        btn.clicked.connect(self.loginFunc)
+        return btn
+
     def menuConfirmPopup(self):
         msg = QMessageBox()
         msg.setWindowTitle("Confirmation")
@@ -189,7 +193,6 @@ class UI(QWidget):
         msg.setDefaultButton(QMessageBox.Cancel)
         msg.setEscapeButton(QMessageBox.Cancel)
         if (msg.exec_() == 1024): #1024 = QMessageBox.OK
-            #print("Back to menu", flush=True)
             self.menuFunc()
         
 
@@ -207,10 +210,15 @@ class UI(QWidget):
             self.calcFunc(0)
 
     def addToOnloadList(self):
-        cNm, okPressed = QInputDialog.getText(self, "Onload Container", "Enter container contents:")
-        if (okPressed): 
-            cWt, okPressed = QInputDialog.getInt(self, "Onload Container", "Enter container weight:", 0, 0, 5000, 1)
-        if (okPressed):
+        cNm = ''
+        while cNm.strip() == '':
+            cNm, ok1Pressed = QInputDialog.getText(self, "Onload Container", "Enter container contents:")
+            if cNm.strip() != '' and ok1Pressed: 
+                cWt, ok2Pressed = QInputDialog.getInt(self, "Onload Container", "Enter container weight:", 0, 0, 99999, 1)
+            else:
+                err = self.errBox("Description must contain at least 1 non-whitespace character.")
+                err.exec_()
+        if ok2Pressed:
             self.onloadListNames.append(str(cNm))
             self.onloadListWts.append(cWt)
             item = QListWidgetItem()
@@ -241,19 +249,22 @@ class UI(QWidget):
     def contFunc(self):
         pass
  
+    def errBox(self, text):
+        d = QMessageBox()
+        d.setIcon(QMessageBox.Critical)
+        d.setText(text)
+        d.setWindowTitle("Error")
+        d.setStandardButtons(QMessageBox.Ok)
+        return d
+
     # jobType 0 = offload/onload, 1 = balance
     def uploadHelper(self, jobType):
         fileName = QFileDialog.getOpenFileName(self, "Open File", "C:\\", "Text files (*.txt)")[0]
         if fileName:
-            print(fileName)
             self.positions = parseManifest(fileName)
             if self.positions == False:
-                errBox = QMessageBox()
-                errBox.setIcon(QMessageBox.Critical)
-                errBox.setText("The file is not of valid manifest format")
-                errBox.setWindowTitle("Error")
-                errBox.setStandardButtons(QMessageBox.Ok)
-                errBox.exec_()
+                err = self.errBox("The file is not a valid manifest.")
+                err.exec_()
             else:
                 if jobType == 0:
                     self.loadFunc()
@@ -269,11 +280,14 @@ class UI(QWidget):
     def getName(self, textfield):
         name = textfield.text()
         self.setWindowTitle(self.title + f" ({name})")
-
         self.menuFunc()
  
     def menuFunc(self):
         self.widgetStack.setCurrentIndex(0)
+        print("clearing load lists")
+        self.onloadListNames.clear()    # clear list
+        self.onloadListWts.clear()      # clear list
+        self.loadRScrollBox.clear()     # clear QListWidget
 
     def loadFunc(self):
         self.widgetStack.setCurrentIndex(1)
