@@ -90,18 +90,20 @@ def test_find_container():
 """
 def test_balance_ship():
     test_ship = Ship()
-    test_ship.from_manifest('ShipCaseHeuristic4.txt')
+    #test_ship.from_manifest('ShipCaseHeuristic4.txt')
+    #test_ship.from_manifest('ShipCase5.txt')
+    test_ship.from_manifest('ShipCase50Containers.txt')
     test_ship.setup_top_available_container_row_indexes()
     test_ship.calculate_weight_left_right_sides_of_ship()
     solution = balance_ship(test_ship)
-    print(solution.ship)
+    #print(solution.ship)
 
 def test_get_top_containers():
     test_ship = Ship()
     test_ship.from_manifest('ShipCase3.txt')
     test_ship.setup_top_available_container_row_indexes()
     top_containers = test_ship.get_list_of_top_containers()
-    print(top_containers)
+    #print(top_containers)
 
 
 def test_get_centermost_container():

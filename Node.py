@@ -4,6 +4,7 @@ class Move:
         self.column_moved_from = column_moved_from
         self.row_moved_to = row_moved_to
         self.column_moved_to = column_moved_to
+        self.distance_end_of_last_move_to_start_of_this_move = 0
 
     def __repr__(self):
 
@@ -47,6 +48,7 @@ class Node:
         #if(self.balance_score == other.balance_score):
         #return (1 - self.balance_score) * self.h_n * self.g_n < (1 - other.balance_score) * other.h_n * other.g_n
         return (1 - self.balance_score)*(self.h_n + self.g_n) < (1 - other.balance_score)*(other.h_n + other.g_n)
+        #return (1 - self.balance_score)*(self.h_n) + self.g_n < (1 - other.balance_score)*(other.h_n) + other.g_n
         #  return (self.h_n + self.g_n + (1 - self.balance_score)) < (other.h_n + other.g_n + (1 - other.balance_score))
         #return (1 - self.balance_score) < (1 - other.balance_score)
 
@@ -98,8 +100,7 @@ class Node:
 
     def __repr__(self):
         # TODO: round g_n to int when done debugging
-        node_string = 'Node g_n: ' + str(self.g_n) + '\n' \
-                      + 'h_n: ' + str(self.h_n) + '\n' \
+        node_string = 'Total minutes to complete this set of moves: ' + str(self.g_n) + '\n' \
                       + 'Moves so far: \n'
         for move in self.moves_so_far:
             node_string += str(move) + '\n'
