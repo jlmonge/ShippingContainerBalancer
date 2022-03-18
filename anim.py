@@ -64,6 +64,7 @@ def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
 
     while current_row > finalPosition[0]:
         newGrid = Grid(grid.containers)
+        newGrid.toggleCellSelection(False)
         copyBackgroundColor(grid if not grids else grids[-1], newGrid)
         if current_row == initialPosition[0]:
             colorCellOnGrid(newGrid, (current_row, current_col), QColor(235, 67, 61))
@@ -75,6 +76,7 @@ def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
 
     while current_col < finalPosition[1]:
         newGrid = Grid(grid.containers)
+        newGrid.toggleCellSelection(False)
         copyBackgroundColor(grid if not grids else grids[-1], newGrid)
         if current_col == finalPosition[1]:
             colorCellOnGrid(newGrid, (current_row, current_col), QColor(66, 219, 86))
