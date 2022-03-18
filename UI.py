@@ -55,10 +55,6 @@ helloMsg = QLabel('Login', parent=window)
 '''
 
 class UI(QWidget):
-    EXIT_CODE_REBOOT = -123
-    #keep him global for use in multiple functions
-
-    
     def __init__(self, parent=None):
         super().__init__(parent)
  
@@ -69,6 +65,8 @@ class UI(QWidget):
         self.height = 880
         self.setWindowTitle(self.title)
         self.setFixedSize(self.width, self.height)
+        self.onloadListNames = []
+        self.onloadListWts = []
         self.loadRScrollBox = QListWidget()
        
         # determine if program was unexpectedly shutdown by power outage
@@ -80,48 +78,38 @@ class UI(QWidget):
     def initUI(self):
         # calculation page
         self.calcPage = QWidget()
-        layout3 = QVBoxLayout(self.calcPage)
+        layout2 = QVBoxLayout(self.calcPage)
         progLabel = QLabel(self.calcPage)
         progLabel.setText('Calculating...')
         progLabel.setAlignment(Qt.AlignCenter)
-        progBar = QProgressBar(self.calcPage)
-        progBar.setMaximum(100)
-        progBtn = QPushButton('Proceed')
-        progBtn.clicked.connect(lambda: self.animationFunc(cont=0))
-        layout3.addWidget(progLabel)
-        layout3.addWidget(progBar)
-        layout3.addWidget(progBtn)
-
-        # login page
-        self.loginPage = QWidget()
-        layout0 = QFormLayout(self.loginPage)
-        textfield = QLineEdit()
-        layout0.addRow("Name", textfield)
-        loginBtn0 = QPushButton('Login')
-        loginBtn0.setEnabled(False)
-        layout0.addWidget(loginBtn0)
-        loginBtn0.clicked.connect(lambda: self.getName(textfield))
+        self.progBar = QProgressBar(self.calcPage)
+        self.progBar.setMaximum(100)
+        self.progBtn = QPushButton('Proceed')
+        self.progBtn.clicked.connect(lambda: self.animationFunc(cont=False))
+        layout2.addWidget(progLabel)
+        layout2.addWidget(self.progBar)
+        layout2.addWidget(self.progBtn)
 
         # main menu
         self.menuPage = QWidget()
-        layout1 = QGridLayout(self.menuPage)
+        layout0 = QGridLayout(self.menuPage)
         loginBtn1 = QPushButton('Login')
-        loginBtn1.clicked.connect(lambda: self.loginFunc(textfield, loginBtn0))
+        loginBtn1.clicked.connect(self.loginFunc)
         loadBtn = QPushButton('Onload/Offload')
         loadBtn.clicked.connect(lambda: self.uploadHelper(jobType=0))
         balanceBtn = QPushButton('Balance')
-        balanceBtn.clicked.connect(lambda: self.uploadHelper(jobType=1, progBar=progBar, progBtn=progBtn))
+        balanceBtn.clicked.connect(lambda: self.uploadHelper(jobType=1))
         contBtn = QPushButton('Continue', enabled=False)
         contBtn.clicked.connect(lambda: self.animationFunc(cont=self.cont))
-        layout1.addWidget(loginBtn1)
-        layout1.addWidget(loadBtn)
-        layout1.addWidget(balanceBtn)
-        layout1.addWidget(contBtn)
+        layout0.addWidget(loginBtn1)
+        layout0.addWidget(loadBtn)
+        layout0.addWidget(balanceBtn)
+        layout0.addWidget(contBtn)
 
-        # onloading / offlading page
+        # onloading / offloading page
         self.loadPage = QWidget()
         self.loadPage.setMinimumWidth(1300)
-        layout2 = QHBoxLayout(self.loadPage)
+        layout1 = QHBoxLayout(self.loadPage)
         theLeft = QVBoxLayout() #login, back, compute buttons
         theLeft.addWidget(QWidget(), 4)
         loginBtn = QPushButton('Login')
@@ -157,45 +145,40 @@ class UI(QWidget):
         loadList.update()
         theRight.addWidget(theScrollArea, 12)
         theRight.addWidget(QWidget(), 2)
-        # testBtn = QPushButton('Run')
-        # testBtn.clicked.connect(lambda: self.calcFunc(jobType=0, progBar=progBar, progBtn=progBtn))
-        # layout2.addWidget(testBtn)   
-        # layout2.addWidget(grid)
-        layout2.addLayout(theLeft, 1)
-        layout2.addLayout(self.theCenter, 5)
-        layout2.addLayout(theRight, 2)
-        layout2.setSpacing(10)
+        layout1.addLayout(theLeft, 1)
+        layout1.addLayout(self.theCenter, 5)
+        layout1.addLayout(theRight, 2)
+        layout1.setSpacing(10)
  
         # animation page
         self.animationPage = QWidget()
-        layout4 = QGridLayout(self.animationPage)
+        layout3 = QGridLayout(self.animationPage)
         testBtn = QPushButton('Complete operation')
         testBtn.clicked.connect(self.completeFunc)
-        layout4.addWidget(testBtn)
+        layout3.addWidget(testBtn)
 
         # job completion page
         self.completePage = QWidget()
-        layout5 = QGridLayout(self.completePage)
+        layout4 = QGridLayout(self.completePage)
         progLabel = QLabel(self.completePage)
         progLabel.setText('All operations have been completed')
         progLabel.setAlignment(Qt.AlignCenter)
         okBtn = QPushButton('OK')
-        okBtn.clicked.connect(self.restartFunc)
-        layout5.addWidget(progLabel)
-        layout5.addWidget(okBtn)
+        okBtn.clicked.connect(self.menuFunc)
+        layout4.addWidget(progLabel)
+        layout4.addWidget(okBtn)
 
         # configuring the widget stack
         self.widgetStack = QStackedWidget(self)
         self.widgetStack.setFixedSize(self.width, self.height)
-        self.widgetStack.addWidget(self.loginPage)      #0
-        self.widgetStack.addWidget(self.menuPage)       #1
-        self.widgetStack.addWidget(self.loadPage)       #2
-        self.widgetStack.addWidget(self.calcPage)       #3
-        self.widgetStack.addWidget(self.animationPage)  #4
-        self.widgetStack.addWidget(self.completePage)   #5
+        self.widgetStack.addWidget(self.menuPage)       #0
+        self.widgetStack.addWidget(self.loadPage)       #1
+        self.widgetStack.addWidget(self.calcPage)       #2
+        self.widgetStack.addWidget(self.animationPage)  #3
+        self.widgetStack.addWidget(self.completePage)   #4
 
         # go to the login page
-        self.loginFunc(textfield, loginBtn0)
+        self.loginFunc()
 
     def menuConfirmPopup(self):
         msg = QMessageBox()
@@ -221,10 +204,7 @@ class UI(QWidget):
         msg.setEscapeButton(QMessageBox.Cancel)
         if (msg.exec_() == 1024):
             print("BEGINNING COMPUTATION", flush = True)
-            #--------------------------------------------------
-            #TODO: Pass to AI
-            #TODO: To operation-list page
-            #--------------------------------------------------
+            self.calcFunc(0)
 
     def addToOnloadList(self):
         cNm, okPressed = QInputDialog.getText(self, "Onload Container", "Enter container contents:")
@@ -257,30 +237,12 @@ class UI(QWidget):
                     self.loadRScrollBox.setCurrentRow(i)
                     self.loadRScrollBox.currentItem().setText(str(i+1) + ". " + self.onloadListNames[i] + "   Wt = " + str(self.onloadListWts[i]))
                 #print("List refreshed!", flush = True)
-
-
-    def progressFunc(self):
-        fileName = QFileDialog.getOpenFileName(self, "Open File", os.getenv('HOME'), "Text files (*.txt)")
-        containers = parseManifest(fileName[0].rsplit('/', 1)[1])
-
-        self.widgetStack.setCurrentIndex(3)
-        if (self.progressLayoutSet == False):
-            layout = QGridLayout(self.progressPage)
-            testBtn = QPushButton('progress')
-            testBtn.clicked.connect(self.loginFunc)
-            layout.addWidget(testBtn)
-            self.progressLayoutSet == True
-
-    def animationFunc(self):
-        if (self.animationLayoutSet == False):
-            print("animation", flush = True)
-            self.animationLayoutSet == True
    
     def contFunc(self):
         pass
  
     # jobType 0 = offload/onload, 1 = balance
-    def uploadHelper(self, jobType, progBar=None, progBtn=None):
+    def uploadHelper(self, jobType):
         fileName = QFileDialog.getOpenFileName(self, "Open File", "C:\\", "Text files (*.txt)")[0]
         if fileName:
             print(fileName)
@@ -296,11 +258,12 @@ class UI(QWidget):
                 if jobType == 0:
                     self.loadFunc()
                 else:
-                    self.calcFunc(jobType=jobType, progBar=progBar, progBtn=progBtn)
+                    self.calcFunc(jobType=jobType)
 
-    def loginFunc(self, textfield, loginBtn):
-        self.widgetStack.setCurrentIndex(0)
-        textfield.textChanged[str].connect(lambda: loginBtn.setEnabled(textfield.text() != ""))
+    def loginFunc(self):
+        name, okPressed = QInputDialog.getText(self, "Login", "Name:", QLineEdit.Normal, "")
+        if okPressed and name != '':
+            self.setWindowTitle(self.title + f" ({name})")
         
     
     def getName(self, textfield):
@@ -310,55 +273,57 @@ class UI(QWidget):
         self.menuFunc()
  
     def menuFunc(self):
-        self.widgetStack.setCurrentIndex(1)
+        self.widgetStack.setCurrentIndex(0)
 
     def loadFunc(self):
-        self.widgetStack.setCurrentIndex(2)
-        grid = Grid(self.positions)
-        grid.setMaximumSize(800, 400)
-        self.theCenter.addWidget(grid)
+        self.widgetStack.setCurrentIndex(1)
+        if self.theCenter.itemAt(1):
+            print("deleting existing grid LOL CAUGHT LOL")
+            self.theCenter.removeWidget(self.grid)
+            self.grid.deleteLater()
+        self.grid = Grid(self.positions)
+        self.grid.setMaximumSize(800, 400)
+        self.theCenter.addWidget(self.grid)
 
 
     '''
     Input: job type (0 for unload/offload, 1 for balance)
     '''
-    def calcFunc(self, jobType, progBar, progBtn):
-        self.widgetStack.setCurrentIndex(3)
-        progBar.reset()
-        progBtn.setEnabled(False)
+    def calcFunc(self, jobType):
+        
+        self.widgetStack.setCurrentIndex(2)
+        self.progBar.reset()
+        self.progBtn.setEnabled(False)
+        #--------------------------------------------------
+        #TODO: Pass to AI
+        #TODO: To operation-list page
+        #--------------------------------------------------
 
         for i in range(100):
             time.sleep(0.01)
-            progBar.setValue(i+1)
+            self.progBar.setValue(i+1)
             QApplication.processEvents()
-        progBtn.setEnabled(True)
+        self.progBtn.setEnabled(True)
             
 
     def animationFunc(self, cont):
-
-        self.widgetStack.setCurrentIndex(4)
+        self.widgetStack.setCurrentIndex(3)
 
     def completeFunc(self):
-        self.widgetStack.setCurrentIndex(5)
-    
-    def restartFunc(self):
-        qApp.exit(UI.EXIT_CODE_REBOOT)
+        self.widgetStack.setCurrentIndex(4)
 
 
 if __name__ == "__main__":
-    currentExitCode = UI.EXIT_CODE_REBOOT
-    while currentExitCode == UI.EXIT_CODE_REBOOT:
-        app = QApplication(sys.argv)
-        app.setStyleSheet("QLineEdit, QPushButton, QLabel { font-size: 24px; }")
-        if not sys.platform.startswith('win32'):
-            msgbox = QMessageBox()
-            msgbox.setIcon(QMessageBox.Critical)
-            msgbox.setText("Incompatible Operating System")
-            msgbox.setWindowTitle("Error")
-            msgbox.setStandardButtons(QMessageBox.Ok)
-            msgbox.exec_()
-        else:
-            ui = UI()
-            ui.show()
-            currentExitCode = app.exec_()
-            app = None
+    app = QApplication(sys.argv)
+    app.setStyleSheet("QLineEdit, QPushButton, QLabel { font-size: 24px; }")
+    if not sys.platform.startswith('win32'):
+        msgbox = QMessageBox()
+        msgbox.setIcon(QMessageBox.Critical)
+        msgbox.setText("Incompatible Operating System")
+        msgbox.setWindowTitle("Error")
+        msgbox.setStandardButtons(QMessageBox.Ok)
+        msgbox.exec_()
+    else:
+        ui = UI()
+        ui.show()
+        sys.exit(app.exec_())
