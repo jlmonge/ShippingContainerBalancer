@@ -227,7 +227,28 @@ class Node:
            
 
 
+class Buffer:
+    def __init__(self):
+        self.buffer = [[[(4-j, i+1), 0, "UNUSED"] for i in range(0,24)] for j in range(0,4)]
+        self.height = 4
+        self.width = 24
 
+    def getCell(self, row, col):
+        return self.buffer[4-row][col-1]
+
+    def setCell(self, row, col, item):
+        self.buffer[4-row][col-1] = item
+
+    def fillClosestEmptyCell(self, item):
+    
+        for col in range(24, 0, -1):
+            for row in range(4, 0, -1):
+                if self.getCell(row, col)[2] == "UNUSED":
+                    self.setCell(row, col, [(row, col), item[1], item[2]])
+                    return (row, col)
+        
+        return None
+            
 
 
 def solve(ship, selected_offloads, selected_onloads):
@@ -236,8 +257,9 @@ def solve(ship, selected_offloads, selected_onloads):
     n = Node(ship, selected_offloads)
     q.put(n)
     s = set()
-    buffer = [["UNUSED" for i in range(0,24)] for j in range(0,4)]
-    print(buffer)
+
+    b = Buffer()
+    print(b.fillClosestEmptyCell([(1,1), 5, "hehexd"]))
 
     history = []
 
