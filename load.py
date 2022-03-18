@@ -2,6 +2,8 @@ from queue import PriorityQueue
 import util
 import math
 
+TRUCK_TO_SHIP_COST_MINUTES = 2
+
 class Node:
 
     def __init__(self, ship, selectedOffload) -> None:
@@ -12,6 +14,7 @@ class Node:
         self.heuristic = 0
         self.ship = ship
         self.action = (None, "to", None)
+        self.timeCost = 0
 
         for item in ship:
             row = item[0][0]
@@ -57,7 +60,7 @@ class Node:
         
         
 
-    def calculateCostFromAToB(self, start, end):
+    def calculateCostFromAToB(start, end):
         x1, y1 = start[0], start[1]
         x2, y2 = end[0], end[1]
 
@@ -137,7 +140,7 @@ class Node:
                 if d == desc:
                     newNode = self.copy()
                     newNode.setStateAt(position[0], position[1], [(position[0], position[1]), 0, "UNUSED"])
-                    newNode.cost += math.sqrt(self.calculateCostFromAToB((r,c), position))
+                    newNode.cost += math.sqrt(Node.calculateCostFromAToB((r,c), position))
                     newNode.setAction((position[0], position[1]), (1,9))
                     
                     if position[0] > 1:
@@ -176,7 +179,8 @@ class Node:
                     newNode = self.copy()
                     newNode.setStateAt(row2, col2, [ (row2, col2), item1[1], desc1] )
                     newNode.setStateAt(row1, col1, [ (row1, col1), 0, "UNUSED"])
-                    newNode.cost += math.sqrt(self.calculateCostFromAToB((row1,col1), (row2, col2)))
+                    newNode.timeCost = Node.calculateCostFromAToB((row1,col1), (row2, col2))
+                    newNode.cost += math.sqrt(newNode.timeCost)
                     newNode.setAction((row1, col1), (row2, col2))
 
                     if row1 > 1:
@@ -199,7 +203,8 @@ class Node:
                     newNode = self.copy()
                     newNode.setStateAt(row2+1, col2, [ (row2+1, col2), item1[1], desc1] )
                     newNode.setStateAt(row1, col1, [ (row1, col1), 0, "UNUSED"])
-                    newNode.cost += math.sqrt(self.calculateCostFromAToB((row1,col1), (row2+1, col2)))
+                    newNode.timeCost = Node.calculateCostFromAToB((row1,col1), (row2+1, col2))
+                    newNode.cost += math.sqrt(newNode.timeCost)
                     newNode.setAction((row1, col1), (row2+1, col2))
                     
                     if row1 > 1:
@@ -256,25 +261,24 @@ def solve(ship, selected_offloads, selected_onloads):
                 q.put(en)
     
 
-    moves = []
-
-    history[0].printState()
+    moves = [] #format  (initial_pos, "to", final_pos, "seconds it takes")
 
     for node in history:
-        moves.append(node.action)
+        moves.append((node.action[0], node.action[1], node.action[2], node.timeCost))
 
     for i in range(1, 9):
         for j in range(1, 13):
             item = history[-1].getStateAt(i,j)
 
             if item[2] == "UNUSED" and selected_onloads:
-                moves.append( (selected_onloads, "to", item) )
+                moves.append( (selected_onloads, "to", item, TRUCK_TO_SHIP_COST_MINUTES + Node.calculateCostFromAToB((1,9), item[0]) ) )
                 selected_onloads = selected_offloads[1:]
                 
 
 
-    # for move in moves:
-    #     print(move)
+    for move in moves:
+        print(move)
+    
     
 
 # solve(util.parseManifest("manifest.txt"), [(3,5, "Dog"), (2,5, "Cat"), (2,3, "test1")], [])
