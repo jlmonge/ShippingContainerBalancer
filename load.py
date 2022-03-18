@@ -132,10 +132,13 @@ class Node:
                     newNode.setContainersOnTop(self.containers_on_top)
                     newNode.setAction((position[0], position[1]), (1,9))
                     
-                    below = newNode.getStateAt(position[0]-1, position[1])
+                    if position[0] > 1:
+                        below = newNode.getStateAt(position[0]-1, position[1])
 
-                    if below[2] != "NAN" and below[2] != "UNUSED":
-                        newNode.containers_on_top[c-1] = newNode.getStateAt(position[0]-1, position[1])
+                        if below[2] != "NAN" and below[2] != "UNUSED":
+                            newNode.containers_on_top[c-1] = newNode.getStateAt(position[0]-1, position[1])
+                        else:
+                            newNode.containers_on_top[c-1] = newNode.getStateAt(position[0], position[1])
                     else:
                         newNode.containers_on_top[c-1] = newNode.getStateAt(position[0], position[1])
                     
@@ -170,10 +173,14 @@ class Node:
                     newNode.setContainersOnTop(self.containers_on_top)
                     newNode.setAction((row1, col1), (row2, col2))
 
-                    below = newNode.getStateAt(row1-1, col1)
-                    if below[2] != "NAN" and below[2] != "UNUSED":
-                        newNode.containers_on_top[col1-1] = newNode.getStateAt(row1-1, col1)
-                        newNode.containers_on_top[col2-1] = newNode.getStateAt(row2, col2)
+                    if row1 < 0:
+                        below = newNode.getStateAt(row1-1, col1)
+                        if below[2] != "NAN" and below[2] != "UNUSED":
+                            newNode.containers_on_top[col1-1] = newNode.getStateAt(row1-1, col1)
+                            newNode.containers_on_top[col2-1] = newNode.getStateAt(row2, col2)
+                        else:
+                            newNode.containers_on_top[col1-1] = newNode.getStateAt(row1, col1)
+                            newNode.containers_on_top[col2-1] = newNode.getStateAt(row2, col2)
                     else:
                         newNode.containers_on_top[col1-1] = newNode.getStateAt(row1, col1)
                         newNode.containers_on_top[col2-1] = newNode.getStateAt(row2, col2)
@@ -191,11 +198,14 @@ class Node:
                     newNode.setContainersOnTop(self.containers_on_top)
                     newNode.setAction((row1, col1), (row2+1, col2))
                     
-
-                    below = newNode.getStateAt(row1-1, col1)
-                    if below[2] != "NAN" and below[2] != "UNUSED":
-                        newNode.containers_on_top[col1-1] = newNode.getStateAt(row1-1, col1)
-                        newNode.containers_on_top[col2-1] = newNode.getStateAt(row2+1, col2)
+                    if row1-1 >= 0:
+                        below = newNode.getStateAt(row1-1, col1)
+                        if below[2] != "NAN" and below[2] != "UNUSED":
+                            newNode.containers_on_top[col1-1] = newNode.getStateAt(row1-1, col1)
+                            newNode.containers_on_top[col2-1] = newNode.getStateAt(row2+1, col2)
+                        else:
+                            newNode.containers_on_top[col1-1] = newNode.getStateAt(row1, col1)
+                            newNode.containers_on_top[col2-1] = newNode.getStateAt(row2+1, col2)
                     else:
                         newNode.containers_on_top[col1-1] = newNode.getStateAt(row1, col1)
                         newNode.containers_on_top[col2-1] = newNode.getStateAt(row2+1, col2)
@@ -221,7 +231,9 @@ def solve(ship, selected_offloads, selected_onloads):
 
 
     while not q.empty():
-        node = q.get()
+        node : Node = q.get()
+
+        print(node.containers_on_top)
 
         if node.atGoalState(): 
             history.append(node)
@@ -248,4 +260,4 @@ def solve(ship, selected_offloads, selected_onloads):
 
 # solve(util.parseManifest("manifest.txt"), [(3,5, "Dog"), (2,5, "Cat"), (2,3, "test1")], [])
 # solve(util.parseManifest("manifest.txt"), [(2,3, "test1")], [])
-solve(util.parseManifest("manifest.txt"), [(3,1, "bird1")], [])
+solve(util.parseManifest("manifest.txt"), [(1,2, "Cat")], [])
