@@ -235,6 +235,8 @@ def solve(ship, selected_offloads, selected_onloads):
     n = Node(ship, selected_offloads)
     q.put(n)
     s = set()
+    buffer = [["UNUSED" for i in range(0,24)] for j in range(0,4)]
+    print(buffer)
 
     history = []
 
@@ -266,13 +268,15 @@ def solve(ship, selected_offloads, selected_onloads):
     for node in history:
         moves.append((node.action[0], node.action[1], node.action[2], node.timeCost))
 
+    print(selected_onloads)
+
     for i in range(1, 9):
         for j in range(1, 13):
             item = history[-1].getStateAt(i,j)
 
             if item[2] == "UNUSED" and selected_onloads:
-                moves.append( (selected_onloads, "to", item, TRUCK_TO_SHIP_COST_MINUTES + Node.calculateCostFromAToB((1,9), item[0]) ) )
-                selected_onloads = selected_offloads[1:]
+                moves.append( (selected_onloads[0], "to", item, TRUCK_TO_SHIP_COST_MINUTES + Node.calculateCostFromAToB((1,9), item[0]) ) )
+                selected_onloads = selected_onloads[1:]
                 
 
 
@@ -283,4 +287,4 @@ def solve(ship, selected_offloads, selected_onloads):
 
 # solve(util.parseManifest("manifest.txt"), [(3,5, "Dog"), (2,5, "Cat"), (2,3, "test1")], [])
 # solve(util.parseManifest("manifest.txt"), [(2,3, "test1")], [])
-solve(util.parseManifest("manifest.txt"),  [ [(2,5), 2000, "Cat"] ], [[2000, "food"]])
+solve(util.parseManifest("manifest.txt"),  [ [(2,5), 2000, "Cat"] ], [[2000, "food"], [2000, "cat"]])
