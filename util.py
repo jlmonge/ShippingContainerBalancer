@@ -53,7 +53,7 @@ def parseManifest(manifest_filename : str) -> List:
 
     if current_line_number < 96:
         log("parseManifest(): Error in manifest file on line {0}".format(current_line_number+1), isDev=True)
-        return []
+        return False
 
     return containers
  

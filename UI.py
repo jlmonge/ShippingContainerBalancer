@@ -53,35 +53,32 @@ window.setGeometry(100, 100, 1600, 900)
 window.move(60, 15)
 helloMsg = QLabel('Login', parent=window)
 '''
- 
-app = QApplication(sys.argv)
- 
+
 class UI(QWidget):
-
+    EXIT_CODE_REBOOT = -123
     #keep him global for use in multiple functions
-    loadRScrollBox = QListWidget()
 
-    #bools! let's not reassign stuff
-    loginLayoutSet = False
-    menuLayoutSet = False
-    loadLayoutSet = False
-    progressLayoutSet = False
-    animationLayoutSet = False
     
     def __init__(self, parent=None):
         super().__init__(parent)
  
         # window config
+        print("initing rn")
         self.title = "Keogh's Yard Portage"
         self.width = 1440
         self.height = 880
         self.setWindowTitle(self.title)
         self.setFixedSize(self.width, self.height)
+        self.loadRScrollBox = QListWidget()
        
         # determine if program was unexpectedly shutdown by power outage
         self.cont = False
 
         # pages config
+        self.initUI()
+    
+    def initUI(self):
+        # calculation page
         self.calcPage = QWidget()
         layout3 = QVBoxLayout(self.calcPage)
         progLabel = QLabel(self.calcPage)
@@ -95,15 +92,17 @@ class UI(QWidget):
         layout3.addWidget(progBar)
         layout3.addWidget(progBtn)
 
+        # login page
         self.loginPage = QWidget()
         layout0 = QFormLayout(self.loginPage)
         textfield = QLineEdit()
         layout0.addRow("Name", textfield)
-        loginBtn0 = QPushButton('Login', enabled=False)
+        loginBtn0 = QPushButton('Login')
+        loginBtn0.setEnabled(False)
         layout0.addWidget(loginBtn0)
         loginBtn0.clicked.connect(lambda: self.getName(textfield))
-        loginBtn0.clicked.connect(lambda: log(textfield.text() + " has logged in."))
 
+        # main menu
         self.menuPage = QWidget()
         layout1 = QGridLayout(self.menuPage)
         loginBtn1 = QPushButton('Login')
@@ -119,11 +118,10 @@ class UI(QWidget):
         layout1.addWidget(balanceBtn)
         layout1.addWidget(contBtn)
 
+        # onloading / offlading page
         self.loadPage = QWidget()
         self.loadPage.setMinimumWidth(1300)
         layout2 = QHBoxLayout(self.loadPage)
-    
-
         theLeft = QVBoxLayout() #login, back, compute buttons
         theLeft.addWidget(QWidget(), 4)
         loginBtn = QPushButton('Login')
@@ -137,22 +135,14 @@ class UI(QWidget):
         computeBtn.clicked.connect(self.computeConfirmPopup)
         theLeft.addWidget(computeBtn, 1)
         theLeft.addWidget(QWidget(), 10)
-    
-        theCenter = QVBoxLayout() #grid and title of page
-                
+        self.theCenter = QVBoxLayout() #grid and title of page   
         unloadLabel = QLabel("Unload")
         # unloadLabel.setStyleSheet("QLabel {background-color: red;}")
         unloadLabel.setFont(QFont('Arial', 30))
         unloadLabel.setMaximumSize(800,50)
         unloadLabel.setAlignment(Qt.AlignCenter)
-        theCenter.addWidget(unloadLabel, Qt.AlignCenter)
-
-        grid = Grid(parseManifest("manifest.txt"))
-        grid.setMaximumSize(800, 400)
-        theCenter.addWidget(grid)
-
+        self.theCenter.addWidget(unloadLabel, Qt.AlignCenter)
         theRight = QVBoxLayout() #name and containers to onload
-        theRight.addWidget(QLabel("Hello, User!\nNot you? Please log in"), 2)
         addOnlBtn = QPushButton('Add container to onload...')
         addOnlBtn.clicked.connect(self.addToOnloadList)
         theRight.addWidget(addOnlBtn, 4)
@@ -167,38 +157,36 @@ class UI(QWidget):
         loadList.update()
         theRight.addWidget(theScrollArea, 12)
         theRight.addWidget(QWidget(), 2)
-
         # testBtn = QPushButton('Run')
         # testBtn.clicked.connect(lambda: self.calcFunc(jobType=0, progBar=progBar, progBtn=progBtn))
         # layout2.addWidget(testBtn)   
         # layout2.addWidget(grid)
-
-
         layout2.addLayout(theLeft, 1)
-        layout2.addLayout(theCenter, 5)
+        layout2.addLayout(self.theCenter, 5)
         layout2.addLayout(theRight, 2)
         layout2.setSpacing(10)
  
-
+        # animation page
         self.animationPage = QWidget()
         layout4 = QGridLayout(self.animationPage)
         testBtn = QPushButton('Complete operation')
         testBtn.clicked.connect(self.completeFunc)
         layout4.addWidget(testBtn)
 
+        # job completion page
         self.completePage = QWidget()
         layout5 = QGridLayout(self.completePage)
         progLabel = QLabel(self.completePage)
         progLabel.setText('All operations have been completed')
         progLabel.setAlignment(Qt.AlignCenter)
         okBtn = QPushButton('OK')
-        okBtn.clicked.connect(self.menuFunc)
+        okBtn.clicked.connect(self.restartFunc)
         layout5.addWidget(progLabel)
         layout5.addWidget(okBtn)
 
+        # configuring the widget stack
         self.widgetStack = QStackedWidget(self)
         self.widgetStack.setFixedSize(self.width, self.height)
-        
         self.widgetStack.addWidget(self.loginPage)      #0
         self.widgetStack.addWidget(self.menuPage)       #1
         self.widgetStack.addWidget(self.loadPage)       #2
@@ -206,9 +194,8 @@ class UI(QWidget):
         self.widgetStack.addWidget(self.animationPage)  #4
         self.widgetStack.addWidget(self.completePage)   #5
 
+        # go to the login page
         self.loginFunc(textfield, loginBtn0)
- 
-       #start at the login page
 
     def menuConfirmPopup(self):
         msg = QMessageBox()
@@ -241,7 +228,7 @@ class UI(QWidget):
 
     def addToOnloadList(self):
         cNm, okPressed = QInputDialog.getText(self, "Onload Container", "Enter container contents:")
-        if (okPressed):
+        if (okPressed): 
             cWt, okPressed = QInputDialog.getInt(self, "Onload Container", "Enter container weight:", 0, 0, 5000, 1)
         if (okPressed):
             self.onloadListNames.append(str(cNm))
@@ -292,17 +279,24 @@ class UI(QWidget):
     def contFunc(self):
         pass
  
+    # jobType 0 = offload/onload, 1 = balance
     def uploadHelper(self, jobType, progBar=None, progBtn=None):
         fileName = QFileDialog.getOpenFileName(self, "Open File", "C:\\", "Text files (*.txt)")[0]
         if fileName:
             print(fileName)
-            positions = parseManifest(fileName)
-            for i in positions:
-                print(i)
-            if jobType == 0:
-                self.loadFunc()
+            self.positions = parseManifest(fileName)
+            if self.positions == False:
+                errBox = QMessageBox()
+                errBox.setIcon(QMessageBox.Critical)
+                errBox.setText("The file is not of valid manifest format")
+                errBox.setWindowTitle("Error")
+                errBox.setStandardButtons(QMessageBox.Ok)
+                errBox.exec_()
             else:
-                self.calcFunc(jobType=jobType, progBar=progBar, progBtn=progBtn)
+                if jobType == 0:
+                    self.loadFunc()
+                else:
+                    self.calcFunc(jobType=jobType, progBar=progBar, progBtn=progBtn)
 
     def loginFunc(self, textfield, loginBtn):
         self.widgetStack.setCurrentIndex(0)
@@ -320,6 +314,9 @@ class UI(QWidget):
 
     def loadFunc(self):
         self.widgetStack.setCurrentIndex(2)
+        grid = Grid(self.positions)
+        grid.setMaximumSize(800, 400)
+        self.theCenter.addWidget(grid)
 
 
     '''
@@ -343,18 +340,25 @@ class UI(QWidget):
 
     def completeFunc(self):
         self.widgetStack.setCurrentIndex(5)
+    
+    def restartFunc(self):
+        qApp.exit(UI.EXIT_CODE_REBOOT)
 
 
 if __name__ == "__main__":
-
-    if not sys.platform.startswith('win32'):
-        msgbox = QMessageBox()
-        msgbox.setIcon(QMessageBox.Critical)
-        msgbox.setText("Incompatible Operating System")
-        msgbox.setWindowTitle("Error")
-        msgbox.setStandardButtons(QMessageBox.Ok)
-        msgbox.exec_()
-    else:
-        ui = UI()
-        ui.show()
-        sys.exit(app.exec_())
+    currentExitCode = UI.EXIT_CODE_REBOOT
+    while currentExitCode == UI.EXIT_CODE_REBOOT:
+        app = QApplication(sys.argv)
+        app.setStyleSheet("QLineEdit, QPushButton, QLabel { font-size: 24px; }")
+        if not sys.platform.startswith('win32'):
+            msgbox = QMessageBox()
+            msgbox.setIcon(QMessageBox.Critical)
+            msgbox.setText("Incompatible Operating System")
+            msgbox.setWindowTitle("Error")
+            msgbox.setStandardButtons(QMessageBox.Ok)
+            msgbox.exec_()
+        else:
+            ui = UI()
+            ui.show()
+            currentExitCode = app.exec_()
+            app = None
