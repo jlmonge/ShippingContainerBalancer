@@ -34,7 +34,6 @@ def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
 
     initialPosition = (8 - initialPosition[0], initialPosition[1]-1)
     finalPosition = (8 - finalPosition[0], finalPosition[1]-1)
-
     currentPosition = [initialPosition[0], initialPosition[1]]
     current_row = currentPosition[0] 
     current_col = currentPosition[1]
@@ -56,15 +55,8 @@ def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
                 color = QColor(255,255,255) if grid.item(i,j).background().color() == QColor(0,0,0) else grid.item(i,j).background().color()
                 otherGrid.item(i, j).setBackground( color ) 
 
-
-
     # colorCellOnGrid(grid, (startingCell[0], startingCell[1]), QColor(235, 67, 61))
     # colorCellOnGrid(grid, (endingCell[0], endingCell[1]), QColor(66, 219, 86))
-
-
-
-
-
 
     while current_row > finalPosition[0]:
         newGrid = Grid(grid.containers)
@@ -100,12 +92,7 @@ def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
             current_col -= 1
             grids.append(newGrid)
 
-    
-
-
-
     return grids
-
 
 def getAnimatedGrid(grid: Grid):
     hbox = QHBoxLayout()
@@ -147,7 +134,6 @@ class AnimatedGrid(QHBoxLayout):
         self.flag = False
 
     def changeWidget(self):
-
         while self.flag:
             for i in range(0, len(self.frames)):
                 self.sw.setCurrentIndex(i)
