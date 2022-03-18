@@ -11,7 +11,7 @@ class Node:
         self.cost = 0
         self.heuristic = 0
         self.ship = ship
-        self.action = ""
+        self.action = (None, "to", None)
 
         for item in ship:
             row = item[0][0]
@@ -31,9 +31,9 @@ class Node:
 
     def setAction(self, initialPosition, destinationPosition):   
         if destinationPosition == (1,9):
-            self.action = "Move the container at ({}, {}) to the truck".format(initialPosition[0], initialPosition[1])
+            self.action = ((initialPosition[0], initialPosition[1]), "to", (1,9))
         else:
-            self.action = "Move the container at ({}, {}) to ({}, {})".format(initialPosition[0], initialPosition[1], destinationPosition[0], destinationPosition[1])
+            self.action = ((initialPosition[0], initialPosition[1]), "to", (destinationPosition[0], destinationPosition[1]))
 
     def calcHeuristic(self):
 
@@ -265,7 +265,7 @@ def solve(ship, selected_offloads, selected_onloads):
             item = history[-1].getStateAt(i,j)
 
             if item[2] == "UNUSED" and selected_onloads:
-                moves.append("Move {} ({}kg) to ({}, {})".format(selected_onloads[0][1], selected_onloads[0][0], item[0][0], item[0][1]))
+                moves.append( (selected_onloads, "to", item) )
                 selected_onloads = selected_offloads[1:]
                 
 
