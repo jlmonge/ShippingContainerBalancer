@@ -33,8 +33,8 @@ class Node:
                     self.containers_on_top[col-1] = item
 
     def setAction(self, initialPosition, destinationPosition):   
-        if destinationPosition == (1,9):
-            self.action = ((initialPosition[0], initialPosition[1]), "to", (1,9))
+        if destinationPosition == (9,1):
+            self.action = ((initialPosition[0], initialPosition[1]), "to", (9,1))
         else:
             self.action = ((initialPosition[0], initialPosition[1]), "to", (destinationPosition[0], destinationPosition[1]))
 
@@ -54,7 +54,7 @@ class Node:
             else:
                 highest_row = max(highest_row, container[0][0])
 
-        #height diff between goal cell (1,9) and highest container
+        #height diff between goal cell (9,1) and highest container
         self.heuristic -= (9 - highest_row + 1)
             
         
@@ -140,8 +140,9 @@ class Node:
                 if d == desc:
                     newNode = self.copy()
                     newNode.setStateAt(position[0], position[1], [(position[0], position[1]), 0, "UNUSED"])
-                    newNode.cost += math.sqrt(Node.calculateCostFromAToB((r,c), position))
-                    newNode.setAction((position[0], position[1]), (1,9))
+                    newNode.timeCost = Node.calculateCostFromAToB((9,1), (r,c))
+                    newNode.cost += math.sqrt(newNode.timeCost)
+                    newNode.setAction(position, (9,1))
                     
                     if position[0] > 1:
                         below = newNode.getStateAt(position[0]-1, position[1])
@@ -275,7 +276,7 @@ def solve(ship, selected_offloads, selected_onloads):
             item = history[-1].getStateAt(i,j)
 
             if item[2] == "UNUSED" and selected_onloads:
-                moves.append( (selected_onloads[0], "to", item, TRUCK_TO_SHIP_COST_MINUTES + Node.calculateCostFromAToB((1,9), item[0]) ) )
+                moves.append( (selected_onloads[0], "to", item, TRUCK_TO_SHIP_COST_MINUTES + Node.calculateCostFromAToB((9,1), item[0]) ) )
                 selected_onloads = selected_onloads[1:]
                 
 
