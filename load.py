@@ -41,7 +41,6 @@ class Node:
         for selected in self.selectedOffload:
             for item in self.containers_on_top:
                 if item[0][1] == selected[0][1]:
-                    print(selected, selected[0][1])
                     self.heuristic += (item[0][0] - selected[0][1])
 
         # count the number of unused columns (columns that don't have a container)
@@ -238,13 +237,10 @@ def solve(ship, selected_offloads, selected_onloads):
     while not q.empty():
         node : Node = q.get()
 
-        print(node.containers_on_top)
-        print(node.selectedOffload)
-
         if node.atGoalState(): 
             history.append(node)
-            node.printState()
-            print("----")
+            # node.printState()
+            # print("----")
             break
 
         node_str = str(node)
@@ -252,18 +248,32 @@ def solve(ship, selected_offloads, selected_onloads):
         if node_str not in s:
             s.add(node_str)
             history.append(node)
-            node.printState()
-            print("----")
+            # node.printState()
+            # print("----")
             expandedNodes = node.executeOperations()
             for en in expandedNodes:
                 q.put(en)
     
 
+    moves = []
+
     for node in history:
-        print(node.action)
-        print("---------------------")
+        moves.append(node.action)
+
+    for i in range(1, 9):
+        for j in range(1, 13):
+            item = history[-1].getStateAt(i,j)
+
+            if item[2] == "UNUSED" and selected_onloads:
+                moves.append("Move {} ({}kg) to ({}, {})".format(selected_onloads[0][1], selected_onloads[0][0], item[0][0], item[0][1]))
+                selected_onloads = selected_offloads[1:]
+                
+
+
+    for move in moves:
+        print(move)
     
 
 # solve(util.parseManifest("manifest.txt"), [(3,5, "Dog"), (2,5, "Cat"), (2,3, "test1")], [])
 # solve(util.parseManifest("manifest.txt"), [(2,3, "test1")], [])
-solve(util.parseManifest("manifest.txt"),  [ [(2,5), 2000, "Cat"] ], [])
+solve(util.parseManifest("manifest.txt"),  [ [(2,5), 2000, "Cat"] ], [[2000, "cocaine"]])
