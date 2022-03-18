@@ -62,6 +62,10 @@ def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
     # colorCellOnGrid(grid, (endingCell[0], endingCell[1]), QColor(66, 219, 86))
 
 
+
+
+
+
     while current_row > finalPosition[0]:
         newGrid = Grid(grid.containers)
         newGrid.toggleCellSelection(False)
@@ -73,17 +77,31 @@ def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
         current_row -= 1
         grids.append(newGrid)
         
+    if current_col < finalPosition[1]:
+        while current_col < finalPosition[1]:
+            newGrid = Grid(grid.containers)
+            newGrid.toggleCellSelection(False)
+            copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+            if current_col == finalPosition[1]:
+                colorCellOnGrid(newGrid, (current_row, current_col), QColor(66, 219, 86))
+            else:
+                colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+            current_col += 1
+            grids.append(newGrid)
+    else:
+        while current_col > finalPosition[1]:
+            newGrid = Grid(grid.containers)
+            newGrid.toggleCellSelection(False)
+            copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+            if current_col == finalPosition[1]:
+                colorCellOnGrid(newGrid, (current_row, current_col), QColor(66, 219, 86))
+            else:
+                colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+            current_col -= 1
+            grids.append(newGrid)
 
-    while current_col < finalPosition[1]:
-        newGrid = Grid(grid.containers)
-        newGrid.toggleCellSelection(False)
-        copyBackgroundColor(grid if not grids else grids[-1], newGrid)
-        if current_col == finalPosition[1]:
-            colorCellOnGrid(newGrid, (current_row, current_col), QColor(66, 219, 86))
-        else:
-            colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
-        current_col += 1
-        grids.append(newGrid)
+    
+
 
 
     return grids
@@ -144,7 +162,7 @@ if __name__ == "__main__":
     window = QWidget()
     layout = QFormLayout()
     grid = Grid(parseManifest("manifest.txt"))
-    frames = [grid] + getAnimationFrames(grid, (3,3), (7,7))
+    # frames = [grid] + getAnimationFrames(grid, (2,6), (8,8))
 
 
     # hbox = QHBoxLayout()
@@ -168,7 +186,8 @@ if __name__ == "__main__":
     # t = QVBoxLayout()
     # t.addLayout(hbox)
 
-    ag = AnimatedGrid(grid, (3,3), (7,7))
+    ag = AnimatedGrid(grid, (2,8), (8,4))
+    # ag = AnimatedGrid(grid, (3,4), (7,4))
 
     window.setLayout(ag)
     window.show()
