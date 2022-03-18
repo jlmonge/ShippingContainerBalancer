@@ -155,10 +155,8 @@ class UI(QWidget):
         #animDesc = QLabel(self.animPage)
         opBtn = QPushButton('Complete operation')
         opBtn.clicked.connect(self.completeFunc) # change completeFunc to progress anim when this is clicked
-        self.animLayout.addWidget(loginBtn3)
-        
-        #layout3.addWidget(self.animDesc)
-        self.animLayout.addWidget(opBtn)
+        self.animLayout.addWidget(loginBtn3, 0, 0)
+        self.animLayout.addWidget(opBtn, 2, 0)
 
         # job completion page
         self.completePage = QWidget()
@@ -277,9 +275,11 @@ class UI(QWidget):
                     self.calcFunc(jobType=jobType)
 
     def loginFunc(self):
-        name, okPressed = QInputDialog.getText(self, "Login", "Name:", QLineEdit.Normal, "")
-        if okPressed and name != '':
-            self.setWindowTitle(self.title + f" ({name})")
+        name = ''
+        while name == '':
+            name, okPressed = QInputDialog.getText(self, "Login", "Name:", QLineEdit.Normal, "")
+            if okPressed and name != '':
+                self.setWindowTitle(self.title + f" ({name})")
         
     
     def getName(self, textfield):
@@ -325,9 +325,18 @@ class UI(QWidget):
 
     def animFunc(self, cont):
         self.widgetStack.setCurrentIndex(3)
-        animGrid = AnimatedGrid(self.grid, (2,8), (8,4)) # get actual pos from algorithm
+        print(self.animLayout.itemAtPosition(1, 0))
+        if self.animLayout.itemAtPosition(1, 0):
+            print("animgrid detected")
+            self.animLayout.removeWidget(self.animWidget)
+            self.animWidget.deleteLater()
+        self.animGrid = AnimatedGrid(self.grid, (2,8), (8,4)) # get actual pos from algorithm
         # ideally, get animDesc from animatedGrid
-        self.animLayout.addLayout(animGrid) # BUG
+        self.animWidget = QWidget(self.animPage)
+        self.animWidget.setLayout(self.animGrid)
+        self.animWidget.setFixedWidth(self.width)
+        self.animLayout.addWidget(self.animWidget, 1, 0)
+        print(self.animLayout.itemAtPosition(1, 0))
 
     def completeFunc(self):
         self.widgetStack.setCurrentIndex(4)

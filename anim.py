@@ -136,9 +136,12 @@ class AnimatedGrid(QHBoxLayout):
     def changeWidget(self):
         while self.flag:
             for i in range(0, len(self.frames)):
-                self.sw.setCurrentIndex(i)
-                time.sleep(0.10)
-    
+                if self.sw:
+                    self.sw.setCurrentIndex(i)
+                    time.sleep(0.1)
+                else:
+                    self.stop()
+                    break
 
     
 
