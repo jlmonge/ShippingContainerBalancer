@@ -247,7 +247,8 @@ def solve(ship, selected_offloads, selected_onloads):
 
         if node_str not in s:
             s.add(node_str)
-            history.append(node)
+
+            if node.action[0] != None: history.append(node)
             # node.printState()
             # print("----")
             expandedNodes = node.executeOperations()
@@ -256,6 +257,8 @@ def solve(ship, selected_offloads, selected_onloads):
     
 
     moves = []
+
+    history[0].printState()
 
     for node in history:
         moves.append(node.action)
@@ -270,10 +273,10 @@ def solve(ship, selected_offloads, selected_onloads):
                 
 
 
-    for move in moves:
-        print(move)
+    # for move in moves:
+    #     print(move)
     
 
 # solve(util.parseManifest("manifest.txt"), [(3,5, "Dog"), (2,5, "Cat"), (2,3, "test1")], [])
 # solve(util.parseManifest("manifest.txt"), [(2,3, "test1")], [])
-solve(util.parseManifest("manifest.txt"),  [ [(2,5), 2000, "Cat"] ], [[2000, "cocaine"]])
+solve(util.parseManifest("manifest.txt"),  [ [(2,5), 2000, "Cat"] ], [[2000, "food"]])
