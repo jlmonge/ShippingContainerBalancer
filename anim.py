@@ -10,7 +10,9 @@ Author: Jan Bodnar
 Website: zetcode.com 
 '''
 
+from concurrent.futures import thread
 from email.charset import QP
+import multiprocessing
 from turtle import update
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
@@ -22,8 +24,8 @@ import time
 from threading import Timer
 import threading 
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer, QThreadPool
-
-
+from multiprocessing import Process
+from threading import Thread
 
 
 def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
@@ -108,16 +110,12 @@ def getAnimatedGrid(grid: Grid):
                 time.sleep(0.10)
                 print(2)
 
-    pool = QThreadPool.globalInstance()
-    pool.start(lambda: changeWidget(frames))
-
-
 
     return hbox
 
 class AnimatedGrid(QHBoxLayout):
 
-    def __init__(self, grid, startPos, finalPos):
+    def __init__(self, grid, startPos, finalPos):   
         super().__init__()
         self.sw = QStackedWidget()
         self.frames = getAnimationFrames(grid, startPos, finalPos)
@@ -127,23 +125,24 @@ class AnimatedGrid(QHBoxLayout):
 
         self.flag = True
 
-        pool = QThreadPool.globalInstance()
-        pool.start(lambda: self.changeWidget())
+
+        self.x = threading.Thread(target=self.changeWidget, args=())
+        self.x.start()
+       
 
     def stop(self):
         self.flag = False
 
+
     def changeWidget(self):
         while self.flag:
+
             for i in range(0, len(self.frames)):
                 if self.sw:
                     self.sw.setCurrentIndex(i)
                     time.sleep(0.1)
-                else:
-                    self.stop()
-                    break
+        return 1
 
-    
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
