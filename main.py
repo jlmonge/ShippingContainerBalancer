@@ -56,6 +56,9 @@ def expand_balancing(node):
                         new_move_made.distance_of_current_move = distance_of_current_move
                         if(node.moves_so_far):
                             new_move_made.distance_end_of_last_move_to_start_of_this_move = node_of_ship_with_new_move.ship.calculate_manhattan_distance_of_move(prev_node_row_moved_to, prev_node_column_moved_to, row_container_moved_from, column_moved_from)
+                        #else:
+                        #    new_move_made.distance_end_of_last_move_to_start_of_this_move = node_of_ship_with_new_move.ship.calculate_manhattan_distance_of_move(int(node_of_ship_with_new_move.ship.height - 1), 0, row_container_moved_from,column_moved_from)
+
                         # ship_balance_score_before = node_of_ship_with_new_move.ship.get_balance_score()
                         node_of_ship_with_new_move.ship.move_container(column_moved_from, column_moved_to)
                         # ship_balance_score_after = node_of_ship_with_new_move.ship.get_balance_score()
@@ -74,6 +77,9 @@ def expand_balancing(node):
                     if column_moved_from != column_moved_to:
                         row_container_moved_to = node.ship.top_available_container_row_indexes[column_moved_to]
                         node_of_ship_with_new_move = copy.deepcopy(node)
+                        if (node.moves_so_far):
+                            prev_node_row_moved_to = node.moves_so_far[-1].row_moved_to
+                            prev_node_column_moved_to = node.moves_so_far[-1].column_moved_to
                         distance_of_current_move = node_of_ship_with_new_move.ship.calculate_manhattan_distance_of_move(
                             row_container_moved_from, column_moved_from, row_container_moved_to, column_moved_to)
                         node_of_ship_with_new_move.g_n += distance_of_current_move
@@ -81,6 +87,9 @@ def expand_balancing(node):
                         new_move_made = Move(row_container_moved_from, column_moved_from, row_container_moved_to,
                                              column_moved_to)
                         new_move_made.distance_of_current_move = distance_of_current_move
+                        if (node.moves_so_far):
+                            new_move_made.distance_end_of_last_move_to_start_of_this_move = node_of_ship_with_new_move.ship.calculate_manhattan_distance_of_move(prev_node_row_moved_to, prev_node_column_moved_to, row_container_moved_from,column_moved_from)
+
                         # ship_balance_score_before = node_of_ship_with_new_move.ship.get_balance_score()
                         node_of_ship_with_new_move.ship.move_container(column_moved_from, column_moved_to)
                         # ship_balance_score_after = node_of_ship_with_new_move.ship.get_balance_score()
@@ -139,11 +148,16 @@ def general_search_balancing(ship_initial_state, is_balance_search):
             if(popped_node.ship.check_ship_for_containers_too_heavy()):
                 popped_node.balance_score = popped_node.ship.get_balance_score()
                 print('Cant balance ship to 0.9 balance score, container too heavy')
-                if(popped_node.moves_so_far):
+                #if(popped_node.moves_so_far):
+                #    for move in popped_node.moves_so_far:
+                #        total_distance += move.distance_end_of_last_move_to_start_of_this_move
+                #    popped_node.g_n += total_distance
+                popped_node.g_n = 0
+                if (popped_node.moves_so_far):
                     for move in popped_node.moves_so_far:
-                        total_distance += move.distance_end_of_last_move_to_start_of_this_move
+                        total_distance += move.distance_of_current_move
                     popped_node.g_n += total_distance
-                popped_node.g_n = int(popped_node.g_n)
+                #   popped_node.g_n = int(popped_node.g_n)
                 #   print('total_distance: ')
                 #   print(popped_node.g_n)
                 #   print(popped_node.moves_so_far)
@@ -151,9 +165,10 @@ def general_search_balancing(ship_initial_state, is_balance_search):
             elif(popped_node.ship.lightest_container_each_side_above_deficit()):
                 popped_node.balance_score = popped_node.ship.get_balance_score()
                 print('Lightest containers above deficit')
+                popped_node.g_n = 0
                 if(popped_node.moves_so_far):
                     for move in popped_node.moves_so_far:
-                        total_distance += move.distance_end_of_last_move_to_start_of_this_move
+                        total_distance += move.distance_of_current_move
                     popped_node.g_n += total_distance
                 popped_node.g_n = int(popped_node.g_n)
                 #   print('total_distance: ')
@@ -170,9 +185,14 @@ def general_search_balancing(ship_initial_state, is_balance_search):
 
         if(found_solution):
             popped_node.balance_score = popped_node.ship.get_balance_score()
+            #if (popped_node.moves_so_far):
+            #    for move in popped_node.moves_so_far:
+            #        total_distance += move.distance_end_of_last_move_to_start_of_this_move
+            #    popped_node.g_n += total_distance
+            popped_node.g_n = 0
             if (popped_node.moves_so_far):
                 for move in popped_node.moves_so_far:
-                    total_distance += move.distance_end_of_last_move_to_start_of_this_move
+                    total_distance += move.distance_of_current_move
                 popped_node.g_n += total_distance
             popped_node.g_n = int(popped_node.g_n)
             #   print('total_distance: ')

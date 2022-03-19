@@ -6,12 +6,12 @@ from main import *
 import os
 from pathlib import Path
 
-list_of_manifests_to_test = ['ShipCase1.txt','ShipCase2.txt','ShipCase3.txt','ShipCase4.txt','ShipCase5.txt']
+#list_of_manifests_to_test = ['ShipCase1.txt','ShipCase2.txt','ShipCase3.txt','ShipCase4.txt','ShipCase5.txt']
 #list_of_manifests_to_test = ['ShipCaseHeuristic1.txt','ShipCaseHeuristic2.txt','ShipCaseHeuristic3.txt','ShipCaseHeuristic4.txt']
 #list_of_manifests_to_test = ['ShipCase10Containers.txt','ShipCase30Containers.txt','ShipCase50Containers.txt']
 #list_of_manifests_to_test = ['ShipCase1.txt','ShipCase2.txt','ShipCase3.txt','ShipCase4.txt','ShipCase5.txt','ShipCase10Containers.txt','ShipCase30Containers.txt','ShipCase50Containers.txt']
 #list_of_manifests_to_test = ['ShipCase30Containers.txt']
-#list_of_manifests_to_test = ['ShipCase1.txt']
+list_of_manifests_to_test = ['ShipCase5.txt']
 #list_of_manifests_to_test = ['single.txt','ten_matching.txt','topRow.txt','over_100k.txt','one_much_bigger.txt','empty.txt','cantBalance.txt','balanced.txt']
 #list_of_manifests_to_test = ['topRow.txt']
 
