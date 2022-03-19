@@ -331,7 +331,7 @@ class UI(QWidget):
                 if move[0] == None:
                     continue
                 elif type(move[0][1]) is str: # dealing with onload
-                    self.moves.append(((9,1), move[2][0], move[3]))
+                    self.moves.append(((8,1), move[2][0], move[3]))
                 else: # dealing with offload
                     self.moves.append((move[0], move[2], move[3]))
         else: # balance
@@ -381,19 +381,7 @@ class UI(QWidget):
     def endFunc(self):
         self.widgetStack.setCurrentIndex(4)
         filename = writeOutboundManifest(self.containers)
-        if currMove >= len(moves):
-            msg = QMessageBox()
-            msg.setWindowTitle("Job completed")
-            msg.setText("No more moves required! Check the desktop for the updated manifest.")
-            msg.setIcon(QMessageBox.Information)
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.setDefaultButton(QMessageBox.Ok)
-            msg.setEscapeButton(QMessageBox.Ok)
-            if (msg.exec_() == 1024): #1024 = QMessageBox.OK
-                self.menuFunc()
-        else:
-            rfileUpdate(2, filename, [], [], [], self.moves, self.currMove)
-            #go to next move
+        #recovery.rfileUpdate(2, filename, [], [], [], self.moves, self.currMove)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
