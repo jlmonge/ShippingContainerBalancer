@@ -5,7 +5,7 @@ class Move:
         self.row_moved_to = row_moved_to
         self.column_moved_to = column_moved_to
         self.distance_end_of_last_move_to_start_of_this_move = 0
-
+        self.distance_of_current_move = 0
     def __repr__(self):
 
         move_string = 'move container from ['
@@ -29,6 +29,23 @@ class Move:
         move_string += str(self.column_moved_to + 1) + ']'
 
         return move_string
+
+    def get_list_representation(self):
+        move = []
+        initial_position = []
+        final_position = []
+        distance = int(self.distance_of_current_move)
+        initial_position.append(self.row_moved_from)
+        initial_position.append(self.column_moved_from)
+        final_position.append(self.row_moved_to)
+        final_position.append(self.column_moved_to)
+        move.append(initial_position)
+        move.append(final_position)
+        move.append(distance)
+        return move
+
+
+        return move
 
 class Node:
     def __init__(self,ship,g_n,h_n):

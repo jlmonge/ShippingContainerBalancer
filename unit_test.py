@@ -6,12 +6,15 @@ from main import *
 import os
 from pathlib import Path
 
-#list_of_manifests_to_test = ['ShipCase1.txt','ShipCase2.txt','ShipCase3.txt','ShipCase4.txt','ShipCase5.txt']
+list_of_manifests_to_test = ['ShipCase1.txt','ShipCase2.txt','ShipCase3.txt','ShipCase4.txt','ShipCase5.txt']
 #list_of_manifests_to_test = ['ShipCaseHeuristic1.txt','ShipCaseHeuristic2.txt','ShipCaseHeuristic3.txt','ShipCaseHeuristic4.txt']
 #list_of_manifests_to_test = ['ShipCase10Containers.txt','ShipCase30Containers.txt','ShipCase50Containers.txt']
 #list_of_manifests_to_test = ['ShipCase1.txt','ShipCase2.txt','ShipCase3.txt','ShipCase4.txt','ShipCase5.txt','ShipCase10Containers.txt','ShipCase30Containers.txt','ShipCase50Containers.txt']
 #list_of_manifests_to_test = ['ShipCase30Containers.txt']
-list_of_manifests_to_test = ['ShipCase1.txt']
+#list_of_manifests_to_test = ['ShipCase1.txt']
+#list_of_manifests_to_test = ['single.txt','ten_matching.txt','topRow.txt','over_100k.txt','one_much_bigger.txt','empty.txt','cantBalance.txt','balanced.txt']
+#list_of_manifests_to_test = ['topRow.txt']
+
 @pytest.mark.parametrize('manifest_for_testing', list_of_manifests_to_test)
 def test_func_to_manifest_and_from_manifest(manifest_for_testing):
     filepath_of_test_manifest = manifest_for_testing
@@ -76,8 +79,8 @@ def test_get_container_in_sorted_container_list():
     test_ship = Ship()
     test_ship.from_manifest('ShipCase4.txt')
     left_side_of_ship = test_ship.get_list_half_of_ship(1)
-    assert len(left_side_of_ship) == 6
     sorted_list_containers = test_ship.get_sorted_container_list_least_to_greatest(left_side_of_ship)
+    assert len(sorted_list_containers) == 7
     assert sorted_list_containers[0].description == 'Doe'
     assert sorted_list_containers[1].description == 'Cat'
     assert sorted_list_containers[2].description == 'Dog'
@@ -125,15 +128,15 @@ def test_is_column_empty():
 
 def test_calculate_heuristic():
     test_ship = Ship()
-    test_ship.from_manifest('ShipCaseHeuristic1')
+    test_ship.from_manifest('ShipCaseHeuristic1.txt')
     test_node = Node(test_ship,0,0)
     heuristic = test_node.calculate_heuristic()
     assert heuristic == 2
     test_ship2 = Ship()
-    test_ship2.from_manifest('ShipCaseHeuristic2')
+    test_ship2.from_manifest('ShipCaseHeuristic2.txt')
     test_node2 = Node(test_ship,0,0)
     heuristic2 = test_node2.calculate_heuristic()
-    assert heuristic2 == 4
+    assert heuristic2 == 2
 
 
 def test_find_container():
@@ -155,7 +158,10 @@ def test_balance_ship(manifest_for_testing):
     test_ship.from_manifest(manifest_for_testing)
     test_ship.setup_top_available_container_row_indexes()
     test_ship.calculate_weight_left_right_sides_of_ship()
+    print(manifest_for_testing)
     solution = balance_ship(test_ship)
+    print(solution)
+    #solution.ship.to_manifest('output_manifest_balance_test.txt')
     #print(solution.ship)
 
 def test_get_top_containers():
