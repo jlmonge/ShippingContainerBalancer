@@ -153,15 +153,20 @@ def general_search_balancing(ship_initial_state, is_balance_search):
                 #        total_distance += move.distance_end_of_last_move_to_start_of_this_move
                 #    popped_node.g_n += total_distance
                 popped_node.g_n = 0
-                if (popped_node.moves_so_far):
-                    for move in popped_node.moves_so_far:
+                #if (popped_node.moves_so_far):
+                #    for move in popped_node.moves_so_far:
+                #        total_distance += move.distance_of_current_move
+                #    popped_node.g_n += total_distance
+                last_node.g_n = 0
+                if (last_node.moves_so_far):
+                    for move in last_node.moves_so_far:
                         total_distance += move.distance_of_current_move
-                    popped_node.g_n += total_distance
+                    last_node.g_n += total_distance
                 #   popped_node.g_n = int(popped_node.g_n)
                 #   print('total_distance: ')
                 #   print(popped_node.g_n)
                 #   print(popped_node.moves_so_far)
-                return popped_node
+                return last_node
             elif(popped_node.ship.lightest_container_each_side_above_deficit()):
                 popped_node.balance_score = popped_node.ship.get_balance_score()
                 print('Lightest containers above deficit')
@@ -177,6 +182,7 @@ def general_search_balancing(ship_initial_state, is_balance_search):
                 return popped_node
 
         balance_score_last_node = popped_node.ship.get_balance_score()
+        last_node = popped_node
         found_solution = False
         if(is_balance_search):
             found_solution = (popped_node.ship.is_balanced())
