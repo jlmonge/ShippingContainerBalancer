@@ -124,3 +124,11 @@ class Node:
 
         return node_string
         # currently not printing ship for each individual node as it will make output hard to read
+
+    def get_moves(self):
+        list_moves = []
+        if(self.moves_so_far):
+            for move in self.moves_so_far:
+                move_list_representation = move.get_list_representation()
+                list_moves.append(move_list_representation)
+        return list_moves
