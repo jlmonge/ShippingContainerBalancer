@@ -135,3 +135,7 @@ dmypy.json
 log/
 devlog/
 manifest.txt
+
+# project files for pycharm
+.idea
+
