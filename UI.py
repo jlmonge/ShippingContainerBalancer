@@ -1,5 +1,6 @@
 from cgitb import text
 from sqlite3 import Time
+from os.path import exists
 import sys
 from util import *
 import time
@@ -7,6 +8,8 @@ from grid import Grid
 from anim import *
 import load
 import main
+import recovery
+import Ship
 
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import * 
@@ -100,7 +103,7 @@ class UI(QWidget):
         loadBtn.clicked.connect(lambda: self.uploadHelper(jobType=0))
         balanceBtn = QPushButton('Balance')
         balanceBtn.clicked.connect(lambda: self.uploadHelper(jobType=1))
-        contBtn = QPushButton('Continue', enabled=False)
+        contBtn = QPushButton('Continue', enabled=True)
         contBtn.clicked.connect(lambda: self.animFunc(cont=self.cont))
         layout0.addWidget(loginBtn0)
         layout0.addWidget(loadBtn)
@@ -310,16 +313,15 @@ class UI(QWidget):
     def calcFunc(self, jobType, offload=None, onload=None):
         self.widgetStack.setCurrentIndex(2)
         self.progBar.reset()
-        self.moves.clear()
         self.progBtn.setEnabled(False)
         self.moves = []
         complete = False
         if jobType == 0: # offload/onload (from load.py)
             moves, complete = load.solve(self.containers, offload, onload)
             for move in moves:
-                self.moves.append( (move[0]), move[] )
+                self.moves.append( (move[0]), move[1] )
         else: # balance
-            ship = Ship()
+            ship = Ship.Ship()
             ship.from_manifest(self.fileName)
             solution = main.balance_ship(ship)
             self.moves = solution.get_list_representation
@@ -335,6 +337,7 @@ class UI(QWidget):
 
     def animFunc(self, cont):
         self.widgetStack.setCurrentIndex(3)
+        self.currMove = 1
         for move in self.moves: # move: tuple
             if move[0] == None:
                 continue
@@ -346,13 +349,25 @@ class UI(QWidget):
             self.animWidget = QWidget(self.animPage)
             self.animWidget.setLayout(self.animGrid)
             self.animWidget.setFixedWidth(self.width)
-            self.animDesc.setText(f"Operation {}/{len(self.moves)}: {} to {}")
+            self.animDesc.setText("this op") #(f"Operation {}/{len(self.moves)}: {} to {}")
             self.animLayout.addWidget(self.animWidget, 1, 0)
 
     def completeFunc(self):
-        self.widgetStack.setCurrentIndex(4)
-        writeOutboundManifest(self.containers)
-
+        self.widgetStack.setCurrentIndex(4) #remove?
+        filename = writeOutboundManifest(self.containers)
+        if currMove >= len(moves):
+            msg = QMessageBox()
+            msg.setWindowTitle("Job completed")
+            msg.setText("No more moves required! Check the desktop for the updated manifest.")
+            msg.setIcon(QMessageBox.Information)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.setDefaultButton(QMessageBox.Ok)
+            msg.setEscapeButton(QMessageBox.Ok)
+            if (msg.exec_() == 1024): #1024 = QMessageBox.OK
+                self.menuFunc()
+        else:
+            rfileUpdate(2, filename, [], [], [], self.moves, self.currMove)
+            #go to next move
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
