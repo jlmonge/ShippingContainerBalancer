@@ -16,9 +16,11 @@ class Node:
         self.action = (None, "to", None)
         self.timeCost = 0
 
-        for item in ship:
+        for id, item in enumerate(ship):
             row = item[0][0]
             col = item[0][1]
+
+            item = [item[0], item[1], item[2]] #remove id
 
             self.setStateAt(row, col, item)
 
@@ -279,32 +281,31 @@ def solve(ship, selected_offloads, selected_onloads):
     s = set()
 
 
-    buffer_gg = GeneralGrid(24, 4)
-    ship_gg = GeneralGrid(12, 8)
+    # buffer_gg = GeneralGrid(24, 4)
+    # ship_gg = GeneralGrid(12, 8)
     history = []
 
-    for i in range(0, len(ship)):
-        item = ship[i]
-        pos = item[0]
-        ship_gg.setCell(pos[0], pos[1], item)
+    # for i in range(0, len(ship)):
+    #     item = ship[i]
+    #     pos = item[0]
+    #     ship_gg.setCell(pos[0], pos[1], item)
 
-    used_cells = 0
-    for i in range(1, 9):
-        for j in range(1,13):
-            item = ship_gg.getCell(i,j)
-            if item[2] != "UNUSED": used_cells += 1
+    # used_cells = 0
+    # for i in range(1, 9):
+    #     for j in range(1,13):
+    #         item = ship_gg.getCell(i,j)
+    #         if item[2] != "UNUSED": used_cells += 1
 
 
-    while used_cells > 70:
-        item = ship_gg.getClosestOccupiedCellLeft()
-        ship_gg.clearCell(item[0][0], item[0][1])
-        pos = buffer_gg.fillClosestEmptyCell(item)
-        used_cells -= 1
+    # while used_cells > 70:
+    #     item = ship_gg.getClosestOccupiedCellLeft()
+    #     ship_gg.clearCell(item[0][0], item[0][1])
+    #     pos = buffer_gg.fillClosestEmptyCell(item)
+    #     used_cells -= 1
 
-        for so in selected_offloads:
-            print(item[0], so[0])
-            if item[0] == so[0][0] and item[1] == so[0][1]:
-                pass
+    #     for so in selected_offloads:
+    #         if item[0] == so[0][0] and item[1] == so[0][1]:
+    #             pass
     
     while not q.empty():
         node : Node = q.get()
@@ -321,8 +322,8 @@ def solve(ship, selected_offloads, selected_onloads):
             s.add(node_str)
 
             if node.action[0] != None: history.append(node)
-            node.printState()
-            print("----")
+            # node.printState()
+            # print("----")
             expandedNodes = node.executeOperations()
             for en in expandedNodes:
                 q.put(en)
@@ -335,8 +336,8 @@ def solve(ship, selected_offloads, selected_onloads):
 
 
     if history:
-        for i in range(1, 9):
-            for j in range(1, 13):
+        for j in range(1, 13):
+            for i in range(1, 9):
                 item = history[-1].getStateAt(i,j)
 
                 if item[2] == "UNUSED" and selected_onloads:
@@ -349,7 +350,17 @@ def solve(ship, selected_offloads, selected_onloads):
         print(move)
     
     
+if __name__ == "__main__":
+    fname = "5_deep_offload_onload.txt"
 
-# solve(util.parseManifest("manifest.txt"), [(3,5, "Dog"), (2,5, "Cat"), (2,3, "test1")], [])
-# solve(util.parseManifest("manifest.txt"), [(2,3, "test1")], [])
-solve(util.parseManifest("manifest.txt"),  [ [(6,6), 0, "52"] ], [[2000, "food"], [2000, "cat"]])
+    offloads = [
+        [(1,7), 2000, "Pikachu"]
+    ]
+
+    onloads = [
+        [1000, "Uranium"],
+        [50, "Gold"],
+
+    ]
+
+    solve(util.parseManifest(fname), offloads, onloads)
