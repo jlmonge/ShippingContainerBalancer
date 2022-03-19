@@ -101,26 +101,26 @@ def lineToMove(line):
     row1 = 0
     index = line.find("[") + 1
     if line[index] == 0:
-        row1 = int(line[index+2])
+        row1 = int(line[index+2]) - 1
     else:
-        row1 = int(line[index+1] + line[index+2])
+        row1 = int(line[index+1] + line[index+2]) - 1
     col1 = 0
     index = line.find(",", index)
     if line[index] == 0:
-        col1 = int(line[index+2])
+        col1 = int(line[index+2]) - 1
     else:
-        col1 = int(line[index+1] + line[index+2])
+        col1 = int(line[index+1] + line[index+2]) - 1
     row2 = 0
     index = line.find("[", index) + 1
     if line[index] == 0:
-        row2 = int(line[index+2])
+        row2 = int(line[index+2]) - 1
     else:
-        row2 = int(line[index+1] + line[index+2])
+        row2 = int(line[index+1] + line[index+2]) - 1
     col2 = 0
     index = line.find(",", index)
     if line[index] == 0:
-        col2 = int(line[index+2])
+        col2 = int(line[index+2]) - 1
     else:
-        col2 = int(line[index+1] + line[index+2])
+        col2 = int(line[index+1] + line[index+2]) - 1
     return Move(row1, col1, row2, col2)
     
