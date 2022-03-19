@@ -1,82 +1,189 @@
+#!/usr/bin/python
+
+'''
+ZetCode Advanced PyQt5 tutorial 
+This program animates the size of a
+widget with QPropertyAnimation.
+Author: Jan Bodnar
+Website: zetcode.com 
+'''
+
+from concurrent.futures import thread
 from email.charset import QP
+import multiprocessing
+from turtle import update
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
 from PyQt5.QtGui import QPainter, QColor, QPen, QPalette
-from util import *
+from grid import Grid
+from util import parseManifest
 import sys
+import time
+from threading import Timer
+import threading 
+from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer, QThreadPool
+from multiprocessing import Process
+from threading import Thread
 
 
-class Grid(QTableWidget):
+def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
 
-    def __init__(self, containers):
-        super().__init__()
+    grid.toggleCellSelection(False)
 
-        self.ROW_SIZE = 8
-        self.COL_SIZE = 12
-        self.SELECTION_COLOR = QColor(255,228,181)
-        self.containers = containers
-        self.selectedContainers = set()
-        self.isSelectionEnabled = True
+    grids = []
 
-        self.setRowCount(self.ROW_SIZE)
-        self.setColumnCount(self.COL_SIZE)
-        self.setHorizontalHeaderLabels([ str(i).center(17, ' ') for i in range(1, self.COL_SIZE+1)])
-        self.setVerticalHeaderLabels([str(i).center(6, ' ') for i in range(self.ROW_SIZE, 0, -1)])
-        self.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus) # diasbles border highlighting
-        self.setSelectionMode(QAbstractItemView.NoSelection)  # disables widget highlighting https://stackoverflow.com/questions/24973378/how-to-disable-selection-highlighting-in-a-qtablewidget
-        self.setEditTriggers(QAbstractItemView.NoEditTriggers) # disables editing of cells
+    initialPosition = (8 - initialPosition[0], initialPosition[1]-1)
+    finalPosition = (8 - min(8,finalPosition[0]), finalPosition[1]-1)
+
+    currentPosition = [initialPosition[0], initialPosition[1]]
+    current_row = currentPosition[0] 
+    current_col = currentPosition[1]
+
+    startingCell = grid.item(initialPosition[0], initialPosition[1])
+    endingCell = grid.item(finalPosition[0], finalPosition[1])
+
+    startingCell.setBackground( (QColor(235, 67, 61)) )
+    endingCell.setBackground( (QColor(43, 194, 63)) )
+
     
-        self.horizontalHeader().resizeSections(QHeaderView.ResizeToContents) #width of cell depends on width of header text
-        self.setStyleSheet("QTableWidget{border: 1px solid black; width: 200px}")
+    def colorCellOnGrid(grid: Grid, position, color):
+        grid.item(position[0], position[1]).setBackground( color )
+        grid.item(1,2).background().color()
 
+    def copyBackgroundColor(grid: Grid, otherGrid: Grid):
+        for i in range (0, 8):
+            for j in range(0, 12):
+                color = QColor(255,255,255) if grid.item(i,j).background().color() == QColor(0,0,0) else grid.item(i,j).background().color()
+                otherGrid.item(i, j).setBackground( color ) 
 
+    # colorCellOnGrid(grid, (startingCell[0], startingCell[1]), QColor(235, 67, 61))
+    # colorCellOnGrid(grid, (endingCell[0], endingCell[1]), QColor(66, 219, 86))
 
-        self.itemClicked.connect(self.onClick)
-
-        for container in self.containers:
-            item = QTableWidgetItem(container[2])
-
-            if container[2] == "NAN":
-                item.setBackground(QColor(101, 110, 140))
-
-            self.setItem(self.ROW_SIZE-container[0][0]-1+1, container[0][1]-1, item)
-
-    def colorWhite(self):
-        for i in range(0, self.ROW_SIZE):
-            for j in range(0, self.COL_SIZE):
-                self.item(i, j).setBackground( QColor(0,0,0) )
-
-    def onClick(self, item: QTableWidgetItem) -> None:
-
-        if not self.isSelectionEnabled: return
-
-        row = self.ROW_SIZE-item.row()
-        col = item.column()+1
-
-        if item.text() == "NAN": return
-
-        if (row, col) in self.selectedContainers:
-            item.setBackground(QColor(255,255,255,0)) #reset background to white
-            self.selectedContainers.remove((row, col))
+    if current_row == finalPosition[0]:
+        if current_col < finalPosition[1]:
+            while current_col < finalPosition[1]:
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+                if current_col != initialPosition[1]:
+                    colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col += 1
+                grids.append(newGrid)
         else:
-            item.setBackground(self.SELECTION_COLOR)
-            self.selectedContainers.add((row, col))
-        
-        print(self.getSelectedContainers())
-    
-    def toggleCellSelection(self, status):
-        self.isSelectionEnabled = status
-    
-    def getSelectedContainers(self) -> List:
+            while current_col > finalPosition[1]:
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+                if current_col != initialPosition[1]:
+                    colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col -= 1
+                grids.append(newGrid)
+    elif current_row > finalPosition[0]:
+        while current_row > finalPosition[0]:
+            newGrid = Grid(grid.containers)
+            newGrid.toggleCellSelection(False)
+            copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+            if current_row != initialPosition[0]:
+                colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+            current_row -= 1
+            grids.append(newGrid)
+            
+        if current_col < finalPosition[1]:
+            while current_col < finalPosition[1]:
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+                colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col += 1
+                grids.append(newGrid)
+        else:
+            while current_col > finalPosition[1]:
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+                colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col -= 1
+                grids.append(newGrid)
+    elif current_row < finalPosition[0]:
 
-        selected = []
+        if current_col < finalPosition[1]:
+            while current_col < finalPosition[1]:
 
-        for container in self.containers:
-            pos = (container[0][0], container[0][1])
-            if pos in self.selectedContainers:
-                selected.append(container)
-        
-        return selected
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+
+                if current_col != initialPosition[1]:
+                    colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col += 1
+                grids.append(newGrid)
+        else:
+            while current_col > finalPosition[1]:
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+                if current_col != initialPosition[1]:
+                    colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col -= 1
+                grids.append(newGrid)
+
+        while current_row < finalPosition[0]:
+            newGrid = Grid(grid.containers)
+            newGrid.toggleCellSelection(False)
+            copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+            colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+            current_row += 1
+            grids.append(newGrid)
+
+
+    return grids
+
+def getAnimatedGrid(grid: Grid):
+    hbox = QHBoxLayout()
+    sw = QStackedWidget()
+    frames = getAnimationFrames(grid, (3,3), (7,7))
+    for frame in frames: sw.addWidget(frame)
+
+    def changeWidget(widgets):
+
+        while True:
+            for i in range(0, len(widgets)):
+                sw.setCurrentIndex(i)
+                time.sleep(0.10)
+                print(2)
+
+
+    return hbox
+
+class AnimatedGrid(QHBoxLayout):
+
+    def __init__(self, grid, startPos, finalPos):   
+        super().__init__()
+        self.sw = QStackedWidget()
+        self.frames = getAnimationFrames(grid, startPos, finalPos)
+        for frame in self.frames:
+            self.sw.addWidget(frame)
+        self.addWidget(self.sw)
+
+        self.flag = True
+
+
+        self.x = threading.Thread(target=self.changeWidget, args=())
+        self.x.start()
+       
+
+    def stop(self):
+        self.flag = False
+
+
+    def changeWidget(self):
+        while self.flag:
+
+            for i in range(0, len(self.frames)):
+                if self.sw:
+                    self.sw.setCurrentIndex(i)
+                    time.sleep(0.1)
+        return 1
 
 
 if __name__ == "__main__":
@@ -84,10 +191,37 @@ if __name__ == "__main__":
 
     window = QWidget()
     layout = QFormLayout()
+    grid = Grid(parseManifest("manifest.txt"))
+    # frames = [grid] + getAnimationFrames(grid, (2,6), (8,8))
 
-    layout.addRow(Grid(parseManifest("manifest.txt")))
-    window.setLayout(layout)
-    window.resize(741, 288)
+
+    # hbox = QHBoxLayout()
+    # sw = QStackedWidget()
+
+    # for x in frames:
+    #     sw.addWidget(x)
+
+    # hbox.addWidget(sw)
+    # def xd(widgets):
+
+    #     while True:
+    #         for i in range(0, len(widgets)):
+    #             sw.setCurrentIndex(i)
+    #             time.sleep(0.10)
+
+
+    # pool = QThreadPool.globalInstance()
+    # pool.start(lambda: xd(frames))
+
+    # t = QVBoxLayout()
+    # t.addLayout(hbox)
+
+    ag = AnimatedGrid(grid, (1,7), (3,3))
+    # ag = AnimatedGrid(grid, (3,4), (7,4))
+
+    window.setLayout(ag)
     window.show()
+
+
 
     sys.exit(app.exec_())
