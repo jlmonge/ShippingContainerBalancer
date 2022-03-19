@@ -332,7 +332,7 @@ def solve(ship, selected_offloads, selected_onloads):
     moves = [] #format  (initial_pos, "to", final_pos, "seconds it takes")
 
     for node in history:
-        moves.append((node.action[0], node.action[1], node.action[2], node.timeCost))
+        moves.append((node.action[0], node.action[1], node.action[2], node.timeCost, node))
 
 
     if history:
@@ -343,7 +343,8 @@ def solve(ship, selected_offloads, selected_onloads):
                 if item[2] == "UNUSED" and selected_onloads:
                     moves.append( (selected_onloads[0], "to", item, TRUCK_TO_SHIP_COST_MINUTES + Node.calculateCostFromAToB((9,1), item[0]) ) )
                     selected_onloads = selected_onloads[1:]
-                
+                 
+    
     return moves, True
     
     
