@@ -53,3 +53,6 @@ class Container:
     def is_invalid(self):
         return self.description == 'NAN'
 
+    def data_for_onload(self):
+        return self.weight, self.description
+

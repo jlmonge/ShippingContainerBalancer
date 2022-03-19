@@ -1,5 +1,6 @@
 from cgitb import text
 from sqlite3 import Time
+from os.path import exists
 import sys
 from util import *
 import time
@@ -7,6 +8,7 @@ from grid import Grid
 from anim import *
 import load
 from main import balance_ship
+import recovery
 import Ship
 
 from PyQt5.QtWidgets import * 
@@ -72,6 +74,7 @@ class UI(QWidget):
         self.onloadListWts = []
         self.moves = []
         self.animOp = 0
+        
         self.loadRScrollBox = QListWidget()
        
         # determine if program was unexpectedly shutdown by power outage
@@ -103,7 +106,7 @@ class UI(QWidget):
         loadBtn.clicked.connect(lambda: self.uploadHelper(jobType=0))
         balanceBtn = QPushButton('Balance')
         balanceBtn.clicked.connect(lambda: self.uploadHelper(jobType=1))
-        contBtn = QPushButton('Continue', enabled=False)
+        contBtn = QPushButton('Continue', enabled=True)
         contBtn.clicked.connect(lambda: self.animFunc(cont=self.cont))
         layout0.addWidget(loginBtn0)
         layout0.addWidget(loadBtn)
@@ -312,9 +315,11 @@ class UI(QWidget):
     Input: job type (0 for unload/offload, 1 for balance)
     '''
     def calcFunc(self, jobType, offload=None, onload=None):
+        self.grid.colorWhite()
         self.widgetStack.setCurrentIndex(2)
         self.progBar.reset()
         moves = []
+        
         if self.moves:
             self.moves.clear()
         self.progBtn.setEnabled(False)
@@ -338,7 +343,7 @@ class UI(QWidget):
                 move[0][0] += 1
                 move[0][1] += 1
                 move[1][0] += 1
-                move[1][1] += 1
+
         print(self.moves)
         for i in range(100):
             time.sleep(0.01)
@@ -367,6 +372,7 @@ class UI(QWidget):
             self.animWidget.setLayout(self.animGrid)
             self.animWidget.setFixedWidth(self.width)
             self.animDesc.setText(f"Operation {self.animOp + 1}/{len(self.moves)}: {initPos} to {finalPos} [{time} min]")
+
             self.animLayout.addWidget(self.animWidget, 1, 0)
             self.animOp = self.animOp + 1
         else:
@@ -374,8 +380,20 @@ class UI(QWidget):
 
     def endFunc(self):
         self.widgetStack.setCurrentIndex(4)
-        writeOutboundManifest(self.containers)
-
+        filename = writeOutboundManifest(self.containers)
+        if currMove >= len(moves):
+            msg = QMessageBox()
+            msg.setWindowTitle("Job completed")
+            msg.setText("No more moves required! Check the desktop for the updated manifest.")
+            msg.setIcon(QMessageBox.Information)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.setDefaultButton(QMessageBox.Ok)
+            msg.setEscapeButton(QMessageBox.Ok)
+            if (msg.exec_() == 1024): #1024 = QMessageBox.OK
+                self.menuFunc()
+        else:
+            rfileUpdate(2, filename, [], [], [], self.moves, self.currMove)
+            #go to next move
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
