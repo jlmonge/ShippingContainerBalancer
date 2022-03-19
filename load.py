@@ -227,28 +227,48 @@ class Node:
            
 
 
-class Buffer:
-    def __init__(self):
-        self.buffer = [[[(4-j, i+1), 0, "UNUSED"] for i in range(0,24)] for j in range(0,4)]
-        self.height = 4
-        self.width = 24
+class GeneralGrid:
+    def __init__(self, width, height):
+        self.height = height
+        self.width = width
+        self.buffer = [[[(self.height-j, i+1), 0, "UNUSED"] for i in range(0,self.width)] for j in range(0,self.height)]
 
     def getCell(self, row, col):
-        return self.buffer[4-row][col-1]
+        return self.buffer[self.height-row][col-1]
 
     def setCell(self, row, col, item):
-        self.buffer[4-row][col-1] = item
+        self.buffer[self.height-row][col-1] = item
 
     def fillClosestEmptyCell(self, item):
     
-        for col in range(24, 0, -1):
-            for row in range(4, 0, -1):
+        for col in range(self.width, 0, -1):
+            for row in range(self.height, 0, -1):
                 if self.getCell(row, col)[2] == "UNUSED":
                     self.setCell(row, col, [(row, col), item[1], item[2]])
                     return (row, col)
         
         return None
-            
+
+    def getClosestEmptyCellRight(self):
+    
+        for col in range(self.width, 0, -1):
+            for row in range(self.height, 0, -1):
+                if self.getCell(row, col)[2] == "UNUSED":
+                    return self.getCell(row, col)
+        
+        return None
+    def getClosestOccupiedCellLeft(self):
+    
+        for col in range(1, self.width+1):
+            for row in range(self.height+1, 0, -1):
+                if self.getCell(row, col)[2] != "UNUSED" and self.getCell(row, col)[2] != "NAN":
+                    return self.getCell(row, col)
+        
+        return None
+
+    def clearCell(self, row, col):
+        self.setCell(row, col, [(row, col), 0, "UNUSED"])
+
 
 
 def solve(ship, selected_offloads, selected_onloads):
@@ -258,12 +278,34 @@ def solve(ship, selected_offloads, selected_onloads):
     q.put(n)
     s = set()
 
-    b = Buffer()
-    print(b.fillClosestEmptyCell([(1,1), 5, "hehexd"]))
 
+    buffer_gg = GeneralGrid(24, 4)
+    ship_gg = GeneralGrid(12, 8)
     history = []
 
+    for i in range(0, len(ship)):
+        item = ship[i]
+        pos = item[0]
+        ship_gg.setCell(pos[0], pos[1], item)
 
+    used_cells = 0
+    for i in range(1, 9):
+        for j in range(1,13):
+            item = ship_gg.getCell(i,j)
+            if item[2] != "UNUSED": used_cells += 1
+
+
+    while used_cells > 70:
+        item = ship_gg.getClosestOccupiedCellLeft()
+        ship_gg.clearCell(item[0][0], item[0][1])
+        pos = buffer_gg.fillClosestEmptyCell(item)
+        used_cells -= 1
+
+        for so in selected_offloads:
+            print(item[0], so[0])
+            if item[0] == so[0][0] and item[1] == so[0][1]:
+                pass
+    
     while not q.empty():
         node : Node = q.get()
 
@@ -279,8 +321,8 @@ def solve(ship, selected_offloads, selected_onloads):
             s.add(node_str)
 
             if node.action[0] != None: history.append(node)
-            # node.printState()
-            # print("----")
+            node.printState()
+            print("----")
             expandedNodes = node.executeOperations()
             for en in expandedNodes:
                 q.put(en)
@@ -291,15 +333,15 @@ def solve(ship, selected_offloads, selected_onloads):
     for node in history:
         moves.append((node.action[0], node.action[1], node.action[2], node.timeCost))
 
-    print(selected_onloads)
 
-    for i in range(1, 9):
-        for j in range(1, 13):
-            item = history[-1].getStateAt(i,j)
+    if history:
+        for i in range(1, 9):
+            for j in range(1, 13):
+                item = history[-1].getStateAt(i,j)
 
-            if item[2] == "UNUSED" and selected_onloads:
-                moves.append( (selected_onloads[0], "to", item, TRUCK_TO_SHIP_COST_MINUTES + Node.calculateCostFromAToB((9,1), item[0]) ) )
-                selected_onloads = selected_onloads[1:]
+                if item[2] == "UNUSED" and selected_onloads:
+                    moves.append( (selected_onloads[0], "to", item, TRUCK_TO_SHIP_COST_MINUTES + Node.calculateCostFromAToB((9,1), item[0]) ) )
+                    selected_onloads = selected_onloads[1:]
                 
 
 
@@ -310,4 +352,4 @@ def solve(ship, selected_offloads, selected_onloads):
 
 # solve(util.parseManifest("manifest.txt"), [(3,5, "Dog"), (2,5, "Cat"), (2,3, "test1")], [])
 # solve(util.parseManifest("manifest.txt"), [(2,3, "test1")], [])
-solve(util.parseManifest("manifest.txt"),  [ [(2,5), 2000, "Cat"] ], [[2000, "food"], [2000, "cat"]])
+solve(util.parseManifest("manifest.txt"),  [ [(6,6), 0, "52"] ], [[2000, "food"], [2000, "cat"]])
