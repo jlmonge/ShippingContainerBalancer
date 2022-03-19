@@ -301,13 +301,10 @@ def solve(ship, selected_offloads, selected_onloads):
                 moves.append( (selected_onloads[0], "to", item, TRUCK_TO_SHIP_COST_MINUTES + Node.calculateCostFromAToB((9,1), item[0]) ) )
                 selected_onloads = selected_onloads[1:]
                 
-
-
-    for move in moves:
-        print(move)
+    return moves, True
     
     
 
 # solve(util.parseManifest("manifest.txt"), [(3,5, "Dog"), (2,5, "Cat"), (2,3, "test1")], [])
 # solve(util.parseManifest("manifest.txt"), [(2,3, "test1")], [])
-solve(util.parseManifest("manifest.txt"),  [ [(2,5), 2000, "Cat"] ], [[2000, "food"], [2000, "cat"]])
+print("SOLUTION:", solve(util.parseManifest("manifest.txt"),  [ [(2,5), 2000, "Cat"] ], [[2000, "food"], [2000, "cat"]]))

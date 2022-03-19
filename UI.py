@@ -5,6 +5,8 @@ from util import *
 import time
 from grid import Grid
 from anim import *
+import load
+import main
 
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import * 
@@ -152,11 +154,12 @@ class UI(QWidget):
         self.animPage = QWidget()
         self.animLayout = QGridLayout(self.animPage)
         loginBtn3 = self.loginBtn()
-        #animDesc = QLabel(self.animPage)
+        self.animDesc = QLabel(self.animPage)
         opBtn = QPushButton('Complete operation')
         opBtn.clicked.connect(self.completeFunc) # change completeFunc to progress anim when this is clicked
         self.animLayout.addWidget(loginBtn3, 0, 0)
-        self.animLayout.addWidget(opBtn, 2, 0)
+        self.animLayout.addWidget(self.animDesc, 2, 0)
+        self.animLayout.addWidget(opBtn, 3, 0)
 
         # job completion page
         self.completePage = QWidget()
@@ -209,7 +212,11 @@ class UI(QWidget):
         msg.setEscapeButton(QMessageBox.Cancel)
         if (msg.exec_() == 1024):
             print("BEGINNING COMPUTATION", flush = True)
-            self.calcFunc(0)
+            offload = self.grid.getSelectedContainers()
+            onload = list(zip(self.onloadListWts, self.onloadListNames))
+            print("OFFLOADED:", offload)
+            print("ONLOADED: ", onload)
+            self.calcFunc(0, offload, onload)
 
     def addToOnloadList(self):
         cNm = ''
@@ -261,18 +268,18 @@ class UI(QWidget):
 
     # jobType 0 = offload/onload, 1 = balance
     def uploadHelper(self, jobType):
-        fileName = QFileDialog.getOpenFileName(self, "Open File", "C:\\", "Text files (*.txt)")[0]
-        if fileName:
-            self.positions = parseManifest(fileName)
-            self.grid = Grid(self.positions)
-            if self.positions == False:
+        self.fileName = QFileDialog.getOpenFileName(self, "Open File", "{0}\{1}".format(os.environ['USERPROFILE'], 'Desktop'), "Text files (*.txt)")[0]
+        if self.fileName:
+            self.containers = parseManifest(self.fileName)
+            self.grid = Grid(self.containers)
+            if self.containers == False:
                 err = self.errBox("The file is not a valid manifest.")
                 err.exec_()
             else:
                 if jobType == 0:
                     self.loadFunc()
                 else:
-                    self.calcFunc(jobType=jobType)
+                    self.calcFunc(jobType=1)
 
     def loginFunc(self):
         name = ''
@@ -280,12 +287,6 @@ class UI(QWidget):
             name, okPressed = QInputDialog.getText(self, "Login", "Name:", QLineEdit.Normal, "")
             if okPressed and name != '':
                 self.setWindowTitle(self.title + f" ({name})")
-        
-    
-    def getName(self, textfield):
-        name = textfield.text()
-        self.setWindowTitle(self.title + f" ({name})")
-        self.menuFunc()
  
     def menuFunc(self):
         self.widgetStack.setCurrentIndex(0)
@@ -306,40 +307,51 @@ class UI(QWidget):
     '''
     Input: job type (0 for unload/offload, 1 for balance)
     '''
-    def calcFunc(self, jobType):
-        
+    def calcFunc(self, jobType, offload=None, onload=None):
         self.widgetStack.setCurrentIndex(2)
         self.progBar.reset()
+        self.moves.clear()
         self.progBtn.setEnabled(False)
-        #--------------------------------------------------
-        #TODO: Pass to AI
-        #TODO: To operation-list page
-        #--------------------------------------------------
-
+        self.moves = []
+        complete = False
+        if jobType == 0: # offload/onload (from load.py)
+            moves, complete = load.solve(self.containers, offload, onload)
+            for move in moves:
+                self.moves.append( (move[0]), move[] )
+        else: # balance
+            ship = Ship()
+            ship.from_manifest(self.fileName)
+            solution = main.balance_ship(ship)
+            self.moves = solution.get_list_representation
         for i in range(100):
             time.sleep(0.01)
-            self.progBar.setValue(i+1)
+            if complete != True and i < 99:
+                self.progBar.setValue(i+1)
+            else:
+                self.progBar.setValue(100)
             QApplication.processEvents()
         self.progBtn.setEnabled(True)
             
 
     def animFunc(self, cont):
         self.widgetStack.setCurrentIndex(3)
-        print(self.animLayout.itemAtPosition(1, 0))
-        if self.animLayout.itemAtPosition(1, 0):
-            print("animgrid detected")
-            self.animLayout.removeWidget(self.animWidget)
-            self.animWidget.deleteLater()
-        self.animGrid = AnimatedGrid(self.grid, (2,8), (8,4)) # get actual pos from algorithm
-        # ideally, get animDesc from animatedGrid
-        self.animWidget = QWidget(self.animPage)
-        self.animWidget.setLayout(self.animGrid)
-        self.animWidget.setFixedWidth(self.width)
-        self.animLayout.addWidget(self.animWidget, 1, 0)
-        print(self.animLayout.itemAtPosition(1, 0))
+        for move in self.moves: # move: tuple
+            if move[0] == None:
+                continue
+            if self.animLayout.itemAtPosition(1, 0):
+                print("animgrid detected")
+                self.animLayout.removeWidget(self.animWidget)
+                self.animWidget.deleteLater()
+            self.animGrid = AnimatedGrid(self.grid, (2,8), (8,4)) # get actual pos from algorithm
+            self.animWidget = QWidget(self.animPage)
+            self.animWidget.setLayout(self.animGrid)
+            self.animWidget.setFixedWidth(self.width)
+            self.animDesc.setText(f"Operation {}/{len(self.moves)}: {} to {}")
+            self.animLayout.addWidget(self.animWidget, 1, 0)
 
     def completeFunc(self):
         self.widgetStack.setCurrentIndex(4)
+        writeOutboundManifest(self.containers)
 
 
 if __name__ == "__main__":
