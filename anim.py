@@ -60,39 +60,82 @@ def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
     # colorCellOnGrid(grid, (startingCell[0], startingCell[1]), QColor(235, 67, 61))
     # colorCellOnGrid(grid, (endingCell[0], endingCell[1]), QColor(66, 219, 86))
 
-    while current_row > finalPosition[0]:
-        newGrid = Grid(grid.containers)
-        newGrid.toggleCellSelection(False)
-        copyBackgroundColor(grid if not grids else grids[-1], newGrid)
-        if current_row == initialPosition[0]:
-            colorCellOnGrid(newGrid, (current_row, current_col), QColor(235, 67, 61))
+    if current_row == finalPosition[0]:
+        if current_col < finalPosition[1]:
+            while current_col < finalPosition[1]:
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+                if current_col != initialPosition[1]:
+                    colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col += 1
+                grids.append(newGrid)
         else:
+            while current_col > finalPosition[1]:
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+                if current_col != initialPosition[1]:
+                    colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col -= 1
+                grids.append(newGrid)
+    elif current_row > finalPosition[0]:
+        while current_row > finalPosition[0]:
+            newGrid = Grid(grid.containers)
+            newGrid.toggleCellSelection(False)
+            copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+            if current_row != initialPosition[0]:
+                colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+            current_row -= 1
+            grids.append(newGrid)
+            
+        if current_col < finalPosition[1]:
+            while current_col < finalPosition[1]:
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+                colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col += 1
+                grids.append(newGrid)
+        else:
+            while current_col > finalPosition[1]:
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+                colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col -= 1
+                grids.append(newGrid)
+    elif current_row < finalPosition[0]:
+
+        if current_col < finalPosition[1]:
+            while current_col < finalPosition[1]:
+
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+
+                if current_col != initialPosition[1]:
+                    colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col += 1
+                grids.append(newGrid)
+        else:
+            while current_col > finalPosition[1]:
+                newGrid = Grid(grid.containers)
+                newGrid.toggleCellSelection(False)
+                copyBackgroundColor(grid if not grids else grids[-1], newGrid)
+                if current_col != initialPosition[1]:
+                    colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
+                current_col -= 1
+                grids.append(newGrid)
+
+        while current_row < finalPosition[0]:
+            newGrid = Grid(grid.containers)
+            newGrid.toggleCellSelection(False)
+            copyBackgroundColor(grid if not grids else grids[-1], newGrid)
             colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
-        current_row -= 1
-        grids.append(newGrid)
-        
-    if current_col < finalPosition[1]:
-        while current_col < finalPosition[1]:
-            newGrid = Grid(grid.containers)
-            newGrid.toggleCellSelection(False)
-            copyBackgroundColor(grid if not grids else grids[-1], newGrid)
-            if current_col == finalPosition[1]:
-                colorCellOnGrid(newGrid, (current_row, current_col), QColor(66, 219, 86))
-            else:
-                colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
-            current_col += 1
+            current_row += 1
             grids.append(newGrid)
-    else:
-        while current_col > finalPosition[1]:
-            newGrid = Grid(grid.containers)
-            newGrid.toggleCellSelection(False)
-            copyBackgroundColor(grid if not grids else grids[-1], newGrid)
-            if current_col == finalPosition[1]:
-                colorCellOnGrid(newGrid, (current_row, current_col), QColor(66, 219, 86))
-            else:
-                colorCellOnGrid(newGrid, (current_row, current_col), QColor(217, 235, 56))
-            current_col -= 1
-            grids.append(newGrid)
+
 
     return grids
 
@@ -174,7 +217,7 @@ if __name__ == "__main__":
     # t = QVBoxLayout()
     # t.addLayout(hbox)
 
-    ag = AnimatedGrid(grid, (2,8), (8,4))
+    ag = AnimatedGrid(grid, (1,7), (3,3))
     # ag = AnimatedGrid(grid, (3,4), (7,4))
 
     window.setLayout(ag)
