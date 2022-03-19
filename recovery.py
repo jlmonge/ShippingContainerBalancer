@@ -63,12 +63,12 @@ def rfileRead():
             else:
                 buffer.append(lineToContainer(L))
         elif varno == 5:
-            if L -- "MOVELIST":
+            if L == "MOVELIST":
                 varno = 6
                 buffer.append(lineToContainer(L))
         elif varno == 6:
             if lines.index(L) == len(lines) - 2:
-                varno = 6
+                varno = 7
             moves.append(lineToMove(L))
         elif varno == 7:
             currMove = int(L)
