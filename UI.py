@@ -4,6 +4,9 @@ import sys
 from util import *
 import time
 from grid import Grid
+from anim import *
+import load
+import main
 
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import * 
@@ -84,7 +87,7 @@ class UI(QWidget):
         self.progBar = QProgressBar(self.calcPage)
         self.progBar.setMaximum(100)
         self.progBtn = QPushButton('Proceed')
-        self.progBtn.clicked.connect(lambda: self.animationFunc(cont=False))
+        self.progBtn.clicked.connect(lambda: self.animFunc(cont=False))
         layout2.addWidget(progLabel)
         layout2.addWidget(self.progBar)
         layout2.addWidget(self.progBtn)
@@ -98,7 +101,7 @@ class UI(QWidget):
         balanceBtn = QPushButton('Balance')
         balanceBtn.clicked.connect(lambda: self.uploadHelper(jobType=1))
         contBtn = QPushButton('Continue', enabled=False)
-        contBtn.clicked.connect(lambda: self.animationFunc(cont=self.cont))
+        contBtn.clicked.connect(lambda: self.animFunc(cont=self.cont))
         layout0.addWidget(loginBtn0)
         layout0.addWidget(loadBtn)
         layout0.addWidget(balanceBtn)
@@ -148,13 +151,15 @@ class UI(QWidget):
         layout1.setSpacing(10)
  
         # animation page
-        self.animationPage = QWidget()
-        layout3 = QGridLayout(self.animationPage)
+        self.animPage = QWidget()
+        self.animLayout = QGridLayout(self.animPage)
         loginBtn3 = self.loginBtn()
+        self.animDesc = QLabel(self.animPage)
         opBtn = QPushButton('Complete operation')
         opBtn.clicked.connect(self.completeFunc) # change completeFunc to progress anim when this is clicked
-        layout3.addWidget(loginBtn3)
-        layout3.addWidget(opBtn)
+        self.animLayout.addWidget(loginBtn3, 0, 0)
+        self.animLayout.addWidget(self.animDesc, 2, 0)
+        self.animLayout.addWidget(opBtn, 3, 0)
 
         # job completion page
         self.completePage = QWidget()
@@ -173,7 +178,7 @@ class UI(QWidget):
         self.widgetStack.addWidget(self.menuPage)       #0
         self.widgetStack.addWidget(self.loadPage)       #1
         self.widgetStack.addWidget(self.calcPage)       #2
-        self.widgetStack.addWidget(self.animationPage)  #3
+        self.widgetStack.addWidget(self.animPage)  #3
         self.widgetStack.addWidget(self.completePage)   #4
 
         # go to the login page
@@ -207,7 +212,11 @@ class UI(QWidget):
         msg.setEscapeButton(QMessageBox.Cancel)
         if (msg.exec_() == 1024):
             print("BEGINNING COMPUTATION", flush = True)
-            self.calcFunc(0)
+            offload = self.grid.getSelectedContainers()
+            onload = list(zip(self.onloadListWts, self.onloadListNames))
+            print("OFFLOADED:", offload)
+            print("ONLOADED: ", onload)
+            self.calcFunc(0, offload, onload)
 
     def addToOnloadList(self):
         cNm = ''
@@ -259,28 +268,25 @@ class UI(QWidget):
 
     # jobType 0 = offload/onload, 1 = balance
     def uploadHelper(self, jobType):
-        fileName = QFileDialog.getOpenFileName(self, "Open File", "C:\\", "Text files (*.txt)")[0]
-        if fileName:
-            self.positions = parseManifest(fileName)
-            if self.positions == False:
+        self.fileName = QFileDialog.getOpenFileName(self, "Open File", "{0}\{1}".format(os.environ['USERPROFILE'], 'Desktop'), "Text files (*.txt)")[0]
+        if self.fileName:
+            self.containers = parseManifest(self.fileName)
+            self.grid = Grid(self.containers)
+            if self.containers == False:
                 err = self.errBox("The file is not a valid manifest.")
                 err.exec_()
             else:
                 if jobType == 0:
                     self.loadFunc()
                 else:
-                    self.calcFunc(jobType=jobType)
+                    self.calcFunc(jobType=1)
 
     def loginFunc(self):
-        name, okPressed = QInputDialog.getText(self, "Login", "Name:", QLineEdit.Normal, "")
-        if okPressed and name != '':
-            self.setWindowTitle(self.title + f" ({name})")
-        
-    
-    def getName(self, textfield):
-        name = textfield.text()
-        self.setWindowTitle(self.title + f" ({name})")
-        self.menuFunc()
+        name = ''
+        while name == '':
+            name, okPressed = QInputDialog.getText(self, "Login", "Name:", QLineEdit.Normal, "")
+            if okPressed and name != '':
+                self.setWindowTitle(self.title + f" ({name})")
  
     def menuFunc(self):
         self.widgetStack.setCurrentIndex(0)
@@ -292,10 +298,8 @@ class UI(QWidget):
     def loadFunc(self):
         self.widgetStack.setCurrentIndex(1)
         if self.theCenter.itemAt(1):
-            print("deleting existing grid LOL CAUGHT LOL")
             self.theCenter.removeWidget(self.grid)
             self.grid.deleteLater()
-        self.grid = Grid(self.positions)
         self.grid.setMaximumSize(800, 400)
         self.theCenter.addWidget(self.grid)
 
@@ -303,28 +307,51 @@ class UI(QWidget):
     '''
     Input: job type (0 for unload/offload, 1 for balance)
     '''
-    def calcFunc(self, jobType):
-        
+    def calcFunc(self, jobType, offload=None, onload=None):
         self.widgetStack.setCurrentIndex(2)
         self.progBar.reset()
+        self.moves.clear()
         self.progBtn.setEnabled(False)
-        #--------------------------------------------------
-        #TODO: Pass to AI
-        #TODO: To operation-list page
-        #--------------------------------------------------
-
+        self.moves = []
+        complete = False
+        if jobType == 0: # offload/onload (from load.py)
+            moves, complete = load.solve(self.containers, offload, onload)
+            for move in moves:
+                self.moves.append( (move[0]), move[] )
+        else: # balance
+            ship = Ship()
+            ship.from_manifest(self.fileName)
+            solution = main.balance_ship(ship)
+            self.moves = solution.get_list_representation
         for i in range(100):
             time.sleep(0.01)
-            self.progBar.setValue(i+1)
+            if complete != True and i < 99:
+                self.progBar.setValue(i+1)
+            else:
+                self.progBar.setValue(100)
             QApplication.processEvents()
         self.progBtn.setEnabled(True)
             
 
-    def animationFunc(self, cont):
+    def animFunc(self, cont):
         self.widgetStack.setCurrentIndex(3)
+        for move in self.moves: # move: tuple
+            if move[0] == None:
+                continue
+            if self.animLayout.itemAtPosition(1, 0):
+                print("animgrid detected")
+                self.animLayout.removeWidget(self.animWidget)
+                self.animWidget.deleteLater()
+            self.animGrid = AnimatedGrid(self.grid, (2,8), (8,4)) # get actual pos from algorithm
+            self.animWidget = QWidget(self.animPage)
+            self.animWidget.setLayout(self.animGrid)
+            self.animWidget.setFixedWidth(self.width)
+            self.animDesc.setText(f"Operation {}/{len(self.moves)}: {} to {}")
+            self.animLayout.addWidget(self.animWidget, 1, 0)
 
     def completeFunc(self):
         self.widgetStack.setCurrentIndex(4)
+        writeOutboundManifest(self.containers)
 
 
 if __name__ == "__main__":

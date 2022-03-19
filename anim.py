@@ -34,6 +34,7 @@ def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
 
     initialPosition = (8 - initialPosition[0], initialPosition[1]-1)
     finalPosition = (8 - min(8,finalPosition[0]), finalPosition[1]-1)
+
     currentPosition = [initialPosition[0], initialPosition[1]]
     current_row = currentPosition[0] 
     current_col = currentPosition[1]
@@ -215,7 +216,7 @@ if __name__ == "__main__":
     # t = QVBoxLayout()
     # t.addLayout(hbox)
 
-    ag = AnimatedGrid(grid, (1,7), (9,1))
+    ag = AnimatedGrid(grid, (1,7), (3,3))
     # ag = AnimatedGrid(grid, (3,4), (7,4))
 
     window.setLayout(ag)
