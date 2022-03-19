@@ -7,7 +7,7 @@ import time
 from grid import Grid
 from anim import *
 import load
-from main import *
+from main import balance_ship
 import recovery
 import Ship
 
@@ -73,6 +73,8 @@ class UI(QWidget):
         self.onloadListNames = []
         self.onloadListWts = []
         self.moves = []
+        self.animOp = 0
+        
         self.loadRScrollBox = QListWidget()
        
         # determine if program was unexpectedly shutdown by power outage
@@ -294,6 +296,7 @@ class UI(QWidget):
  
     def menuFunc(self):
         self.widgetStack.setCurrentIndex(0)
+        self.animOp = 0
         print("clearing load lists")
         self.onloadListNames.clear()    # clear list
         self.onloadListWts.clear()      # clear list
@@ -315,19 +318,32 @@ class UI(QWidget):
         self.grid.colorWhite()
         self.widgetStack.setCurrentIndex(2)
         self.progBar.reset()
+        moves = []
+        
         if self.moves:
             self.moves.clear()
         self.progBtn.setEnabled(False)
         complete = False
         if jobType == 0: # offload/onload (from load.py)
-            self.moves, complete = load.solve(self.containers, offload, onload)
-            for move in self.moves:
-                self.moves.append( (move[0]), move[1] )
+            moves, complete = load.solve(self.containers, offload, onload)
+            print(moves)
+            for move in moves:
+                if move[0] == None:
+                    continue
+                elif type(move[0][1]) is str: # dealing with onload
+                    self.moves.append(((9,1), move[2][0], move[3]))
+                else: # dealing with offload
+                    self.moves.append((move[0], move[2], move[3]))
         else: # balance
             ship = Ship.Ship()
             ship.from_manifest(self.fileName)
             solution = balance_ship(ship)
             self.moves = solution.get_moves()
+            for move in self.moves:
+                move[0][0] += 1
+                move[0][1] += 1
+                move[1][0] += 1
+
         print(self.moves)
         for i in range(100):
             time.sleep(0.01)
@@ -341,23 +357,29 @@ class UI(QWidget):
 
     def animFunc(self, cont):
         self.widgetStack.setCurrentIndex(3)
-        self.currMove = 1
-        for idx, move in enumerate(self.moves): # move: tuple
-            if move[0] == None:
-                continue
+        self.completeFunc()
+        
+    def completeFunc(self):
+        if self.animOp < len(self.moves):
+            initPos = self.moves[self.animOp][0]
+            finalPos = self.moves[self.animOp][1]
+            time = self.moves[self.animOp][2]
             if self.animLayout.itemAtPosition(1, 0):
-                print("animgrid detected")
                 self.animLayout.removeWidget(self.animWidget)
                 self.animWidget.deleteLater()
-            self.animGrid = AnimatedGrid(self.grid, (2,8), (8,4)) # get actual pos from algorithm
+            self.animGrid = AnimatedGrid(self.grid, initPos, finalPos) # get actual pos from algorithm
             self.animWidget = QWidget(self.animPage)
             self.animWidget.setLayout(self.animGrid)
             self.animWidget.setFixedWidth(self.width)
-            self.animDesc.setText(f"Operation {idx}/{len(self.moves)}: {move[0]} to {move[1]} [{move[2]} min]")
-            self.animLayout.addWidget(self.animWidget, 1, 0)
+            self.animDesc.setText(f"Operation {self.animOp + 1}/{len(self.moves)}: {initPos} to {finalPos} [{time} min]")
 
-    def completeFunc(self):
-        self.widgetStack.setCurrentIndex(4) #remove?
+            self.animLayout.addWidget(self.animWidget, 1, 0)
+            self.animOp = self.animOp + 1
+        else:
+            self.endFunc()
+
+    def endFunc(self):
+        self.widgetStack.setCurrentIndex(4)
         filename = writeOutboundManifest(self.containers)
         if currMove >= len(moves):
             msg = QMessageBox()

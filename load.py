@@ -364,3 +364,6 @@ if __name__ == "__main__":
 
     solve(util.parseManifest(fname), offloads, onloads)
 
+# solve(util.parseManifest("manifest.txt"), [(3,5, "Dog"), (2,5, "Cat"), (2,3, "test1")], [])
+# solve(util.parseManifest("manifest.txt"), [(2,3, "test1")], [])
+#print("SOLUTION:", solve(util.parseManifest("manifest.txt"),  [ [(2,5), 2000, "Cat"] ], [[2000, "food"], [2000, "cat"]]))
