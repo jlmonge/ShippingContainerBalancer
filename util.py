@@ -20,8 +20,8 @@ def log(description : str, isDev: bool=False):
 
 def parseManifest(manifest_filename : str) -> List:
 
-    if not os.path.isfile("{0}\{1}".format(os.getcwd(), manifest_filename)):
-        log("parseManifest(): Failed to locate {0}\{1}".format(os.getcwd(), manifest_filename), isDev=True)
+    if not os.path.isfile(manifest_filename):
+        log("parseManifest(): Failed to locate {0}".format(manifest_filename), isDev=True)
         return False
 
     f = open(manifest_filename, 'r')
@@ -53,7 +53,7 @@ def parseManifest(manifest_filename : str) -> List:
 
     if current_line_number < 96:
         log("parseManifest(): Error in manifest file on line {0}".format(current_line_number+1), isDev=True)
-        return []
+        return False
 
     return containers
  

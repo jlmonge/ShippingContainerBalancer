@@ -2,6 +2,8 @@ from queue import PriorityQueue
 import util
 import math
 
+TRUCK_TO_SHIP_COST_MINUTES = 2
+
 class Node:
 
     def __init__(self, ship, selectedOffload) -> None:
@@ -11,11 +13,14 @@ class Node:
         self.cost = 0
         self.heuristic = 0
         self.ship = ship
-        self.action = ""
+        self.action = (None, "to", None)
+        self.timeCost = 0
 
-        for item in ship:
+        for id, item in enumerate(ship):
             row = item[0][0]
             col = item[0][1]
+
+            item = [item[0], item[1], item[2]] #remove id
 
             self.setStateAt(row, col, item)
 
@@ -30,37 +35,34 @@ class Node:
                     self.containers_on_top[col-1] = item
 
     def setAction(self, initialPosition, destinationPosition):   
-        if destinationPosition == (1,9):
-            self.action = "Move the container at ({}, {}) to the truck".format(initialPosition[0], initialPosition[1])
+        if destinationPosition == (9,1):
+            self.action = ((initialPosition[0], initialPosition[1]), "to", (9,1))
         else:
-            self.action = "Move the container at ({}, {}) to ({}, {})".format(initialPosition[0], initialPosition[1], destinationPosition[0], destinationPosition[1])
-
-    def setContainersOnTop(self, other):
-        self.containers_on_top = [item for item in other]
+            self.action = ((initialPosition[0], initialPosition[1]), "to", (destinationPosition[0], destinationPosition[1]))
 
     def calcHeuristic(self):
 
         # the number of containers above a container selected for offloading
         for selected in self.selectedOffload:
             for item in self.containers_on_top:
-                if item[0][1] == selected[1]:
-                    self.heuristic += (item[0][0] - selected[0])
+                if item[0][1] == selected[0][1]:
+                    self.heuristic += (item[0][0] - selected[0][1])
 
         # count the number of unused columns (columns that don't have a container)
         highest_row = 0
         for container in self.containers_on_top:
             if container[2] == "UNUSED" or container[2] == "NAN": 
-                self.heuristic += 1
+                self.heuristic -= 1
             else:
                 highest_row = max(highest_row, container[0][0])
 
-        #height diff between goal cell (1,9) and highest container
+        #height diff between goal cell (9,1) and highest container
         self.heuristic -= (9 - highest_row + 1)
             
         
         
 
-    def calculateCostFromAToB(self, start, end):
+    def calculateCostFromAToB(start, end):
         x1, y1 = start[0], start[1]
         x2, y2 = end[0], end[1]
 
@@ -69,14 +71,19 @@ class Node:
 
     def atGoalState(self):
 
+        def stringifyItem(item):
+            return "{} {} {}".format(item[0], item[1], item[2])
+
         s = set()
         
-        for (row, col, desc) in self.selectedOffload:
-            s.add(desc)
+        for offload in self.selectedOffload:
+            s.add(stringifyItem(offload))
+
         for i in range(1, 9):
             for j in range(1, 13):
                 item = self.getStateAt(i,j)
-                if item[2] in s: return False
+                if stringifyItem(item) in s: return False
+        
         
         return True
 
@@ -89,16 +96,6 @@ class Node:
 
     def setStateAt(self, row, col, item):
         self.state[8-row][col-1] = item
-
-    def setState(self, state):
-        
-        newState = [[None for i in range(0, 12)] for i in range(0, 8)]
-
-        for i in range(0, len(state)):
-            for j in range(0, len(state[0])):
-                newState[i][j] = state[i][j]
-
-        self.state = newState
 
     def __str__(self) -> str:
         s = ""
@@ -115,6 +112,24 @@ class Node:
                 print(self.state[i][j][2], end=" ")
             print()
 
+    def copy(self):
+
+
+        newNode = Node(self.ship, self.selectedOffload)
+
+        for i in range(0, len(self.containers_on_top)):
+            newNode.containers_on_top[i] = self.containers_on_top[i]
+
+        newNode.cost = self.cost
+        newNode.heuristic = self.heuristic
+        newNode.action = ""
+
+        for i in range(0, len(self.state)):
+            for j in range(0, len(self.state[0])):
+                newNode.state[i][j] = self.state[i][j]
+
+        return newNode 
+
     def executeOperations(self):
 
         newNodes = []
@@ -122,20 +137,22 @@ class Node:
         selectedContainers = self.selectedOffload
 
         # Remove a container selected for offloading if no containers on top of it
-        for (r, c, d) in selectedContainers:
+        for ((r,c), w, d) in selectedContainers:
             for position, weight, desc in self.containers_on_top:
                 if d == desc:
-                    newNode = Node(self.ship, self.selectedOffload)
-                    newNode.setState(self.state)
+                    newNode = self.copy()
                     newNode.setStateAt(position[0], position[1], [(position[0], position[1]), 0, "UNUSED"])
-                    newNode.cost += math.sqrt(self.calculateCostFromAToB((r,c), position))
-                    newNode.setContainersOnTop(self.containers_on_top)
-                    newNode.setAction((position[0], position[1]), (1,9))
+                    newNode.timeCost = Node.calculateCostFromAToB((9,1), (r,c))
+                    newNode.cost += math.sqrt(newNode.timeCost)
+                    newNode.setAction(position, (9,1))
                     
-                    below = newNode.getStateAt(position[0]-1, position[1])
+                    if position[0] > 1:
+                        below = newNode.getStateAt(position[0]-1, position[1])
 
-                    if below[2] != "NAN" and below[2] != "UNUSED":
-                        newNode.containers_on_top[c-1] = newNode.getStateAt(position[0]-1, position[1])
+                        if below[2] != "NAN" and below[2] != "UNUSED":
+                            newNode.containers_on_top[c-1] = newNode.getStateAt(position[0]-1, position[1])
+                        else:
+                            newNode.containers_on_top[c-1] = newNode.getStateAt(position[0], position[1])
                     else:
                         newNode.containers_on_top[c-1] = newNode.getStateAt(position[0], position[1])
                     
@@ -162,18 +179,21 @@ class Node:
 
 
                 if desc2 == "UNUSED":
-                    newNode = Node(self.ship, self.selectedOffload)
-                    newNode.setState(self.state)
+                    newNode = self.copy()
                     newNode.setStateAt(row2, col2, [ (row2, col2), item1[1], desc1] )
                     newNode.setStateAt(row1, col1, [ (row1, col1), 0, "UNUSED"])
-                    newNode.cost += math.sqrt(self.calculateCostFromAToB((row1,col1), (row2, col2)))
-                    newNode.setContainersOnTop(self.containers_on_top)
+                    newNode.timeCost = Node.calculateCostFromAToB((row1,col1), (row2, col2))
+                    newNode.cost += math.sqrt(newNode.timeCost)
                     newNode.setAction((row1, col1), (row2, col2))
 
-                    below = newNode.getStateAt(row1-1, col1)
-                    if below[2] != "NAN" and below[2] != "UNUSED":
-                        newNode.containers_on_top[col1-1] = newNode.getStateAt(row1-1, col1)
-                        newNode.containers_on_top[col2-1] = newNode.getStateAt(row2, col2)
+                    if row1 > 1:
+                        below = newNode.getStateAt(row1-1, col1)
+                        if below[2] != "NAN" and below[2] != "UNUSED":
+                            newNode.containers_on_top[col1-1] = newNode.getStateAt(row1-1, col1)
+                            newNode.containers_on_top[col2-1] = newNode.getStateAt(row2, col2)
+                        else:
+                            newNode.containers_on_top[col1-1] = newNode.getStateAt(row1, col1)
+                            newNode.containers_on_top[col2-1] = newNode.getStateAt(row2, col2)
                     else:
                         newNode.containers_on_top[col1-1] = newNode.getStateAt(row1, col1)
                         newNode.containers_on_top[col2-1] = newNode.getStateAt(row2, col2)
@@ -183,19 +203,21 @@ class Node:
                     newNode.calcHeuristic()
                     newNodes.append(newNode)
                 elif desc2 != "NAN" and row2+1 < 8:
-                    newNode = Node(self.ship, self.selectedOffload)
-                    newNode.setState(self.state)
+                    newNode = self.copy()
                     newNode.setStateAt(row2+1, col2, [ (row2+1, col2), item1[1], desc1] )
                     newNode.setStateAt(row1, col1, [ (row1, col1), 0, "UNUSED"])
-                    newNode.cost += math.sqrt(self.calculateCostFromAToB((row1,col1), (row2+1, col2)))
-                    newNode.setContainersOnTop(self.containers_on_top)
+                    newNode.timeCost = Node.calculateCostFromAToB((row1,col1), (row2+1, col2))
+                    newNode.cost += math.sqrt(newNode.timeCost)
                     newNode.setAction((row1, col1), (row2+1, col2))
                     
-
-                    below = newNode.getStateAt(row1-1, col1)
-                    if below[2] != "NAN" and below[2] != "UNUSED":
-                        newNode.containers_on_top[col1-1] = newNode.getStateAt(row1-1, col1)
-                        newNode.containers_on_top[col2-1] = newNode.getStateAt(row2+1, col2)
+                    if row1 > 1:
+                        below = newNode.getStateAt(row1-1, col1)
+                        if below[2] != "NAN" and below[2] != "UNUSED":
+                            newNode.containers_on_top[col1-1] = newNode.getStateAt(row1-1, col1)
+                            newNode.containers_on_top[col2-1] = newNode.getStateAt(row2+1, col2)
+                        else:
+                            newNode.containers_on_top[col1-1] = newNode.getStateAt(row1, col1)
+                            newNode.containers_on_top[col2-1] = newNode.getStateAt(row2+1, col2)
                     else:
                         newNode.containers_on_top[col1-1] = newNode.getStateAt(row1, col1)
                         newNode.containers_on_top[col2-1] = newNode.getStateAt(row2+1, col2)
@@ -207,6 +229,47 @@ class Node:
            
 
 
+class GeneralGrid:
+    def __init__(self, width, height):
+        self.height = height
+        self.width = width
+        self.buffer = [[[(self.height-j, i+1), 0, "UNUSED"] for i in range(0,self.width)] for j in range(0,self.height)]
+
+    def getCell(self, row, col):
+        return self.buffer[self.height-row][col-1]
+
+    def setCell(self, row, col, item):
+        self.buffer[self.height-row][col-1] = item
+
+    def fillClosestEmptyCell(self, item):
+    
+        for col in range(self.width, 0, -1):
+            for row in range(self.height, 0, -1):
+                if self.getCell(row, col)[2] == "UNUSED":
+                    self.setCell(row, col, [(row, col), item[1], item[2]])
+                    return (row, col)
+        
+        return None
+
+    def getClosestEmptyCellRight(self):
+    
+        for col in range(self.width, 0, -1):
+            for row in range(self.height, 0, -1):
+                if self.getCell(row, col)[2] == "UNUSED":
+                    return self.getCell(row, col)
+        
+        return None
+    def getClosestOccupiedCellLeft(self):
+    
+        for col in range(1, self.width+1):
+            for row in range(self.height+1, 0, -1):
+                if self.getCell(row, col)[2] != "UNUSED" and self.getCell(row, col)[2] != "NAN":
+                    return self.getCell(row, col)
+        
+        return None
+
+    def clearCell(self, row, col):
+        self.setCell(row, col, [(row, col), 0, "UNUSED"])
 
 
 
@@ -217,35 +280,87 @@ def solve(ship, selected_offloads, selected_onloads):
     q.put(n)
     s = set()
 
+
+    # buffer_gg = GeneralGrid(24, 4)
+    # ship_gg = GeneralGrid(12, 8)
     history = []
 
+    # for i in range(0, len(ship)):
+    #     item = ship[i]
+    #     pos = item[0]
+    #     ship_gg.setCell(pos[0], pos[1], item)
 
+    # used_cells = 0
+    # for i in range(1, 9):
+    #     for j in range(1,13):
+    #         item = ship_gg.getCell(i,j)
+    #         if item[2] != "UNUSED": used_cells += 1
+
+
+    # while used_cells > 70:
+    #     item = ship_gg.getClosestOccupiedCellLeft()
+    #     ship_gg.clearCell(item[0][0], item[0][1])
+    #     pos = buffer_gg.fillClosestEmptyCell(item)
+    #     used_cells -= 1
+
+    #     for so in selected_offloads:
+    #         if item[0] == so[0][0] and item[1] == so[0][1]:
+    #             pass
+    
     while not q.empty():
-        node = q.get()
+        node : Node = q.get()
 
         if node.atGoalState(): 
             history.append(node)
-            node.printState()
-            print("----")
+            # node.printState()
+            # print("----")
             break
 
         node_str = str(node)
 
         if node_str not in s:
             s.add(node_str)
-            history.append(node)
-            node.printState()
-            print("----")
+
+            if node.action[0] != None: history.append(node)
+            # node.printState()
+            # print("----")
             expandedNodes = node.executeOperations()
             for en in expandedNodes:
                 q.put(en)
     
 
-    for node in history:
-        print(node.action)
-        print("---------------------")
-    
+    moves = [] #format  (initial_pos, "to", final_pos, "seconds it takes")
 
-# solve(util.parseManifest("manifest.txt"), [(3,5, "Dog"), (2,5, "Cat"), (2,3, "test1")], [])
-# solve(util.parseManifest("manifest.txt"), [(2,3, "test1")], [])
-solve(util.parseManifest("manifest.txt"), [(3,1, "bird1")], [])
+    for node in history:
+        moves.append((node.action[0], node.action[1], node.action[2], node.timeCost, node))
+
+
+    if history:
+        for j in range(1, 13):
+            for i in range(1, 9):
+                item = history[-1].getStateAt(i,j)
+
+                if item[2] == "UNUSED" and selected_onloads:
+                    moves.append( (selected_onloads[0], "to", item, TRUCK_TO_SHIP_COST_MINUTES + Node.calculateCostFromAToB((9,1), item[0]) ) )
+                    selected_onloads = selected_onloads[1:]
+                 
+    
+    return moves, True
+    
+    
+if __name__ == "__main__":
+    fname = "5_deep_offload_onload.txt"
+
+    offloads = [
+        [(1,7), 2000, "Pikachu"]
+    ]
+
+    onloads = [
+        [1000, "Uranium"],
+        [50, "Gold"],
+
+    ]
+
+
+    solve(util.parseManifest(fname), offloads, onloads)
+
