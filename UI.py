@@ -7,7 +7,7 @@ import time
 from grid import Grid
 from anim import *
 import load
-import main
+from main import *
 import recovery
 import Ship
 
@@ -327,7 +327,7 @@ class UI(QWidget):
             ship = Ship.Ship()
             ship.from_manifest(self.fileName)
             solution = balance_ship(ship)
-            self.moves = solution.get_list_representation()
+            self.moves = solution.get_moves()
         print(self.moves)
         for i in range(100):
             time.sleep(0.01)
