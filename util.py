@@ -57,10 +57,11 @@ def parseManifest(manifest_filename : str) -> List:
 
     return containers
  
-def writeOutboundManifest(containers: List):
-
+def writeOutboundManifest(containers: List, file):
+    file = file.rsplit('/', 1)[-1]
+    file = file[:-4]
     path_to_desktop = "{0}\{1}".format(os.environ['USERPROFILE'], 'Desktop')
-    f = open("{0}\{1}".format(path_to_desktop, "manifest_OUTBOUND.txt"), 'w')
+    f = open("{0}\{1}".format(path_to_desktop, f"{file}OUTBOUND.txt"), 'w')
 
     for position, weight, description in containers:
 

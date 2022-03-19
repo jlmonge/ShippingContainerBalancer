@@ -276,6 +276,7 @@ class UI(QWidget):
     def uploadHelper(self, jobType):
         self.fileName = QFileDialog.getOpenFileName(self, "Open File", "{0}\{1}".format(os.environ['USERPROFILE'], 'Desktop'), "Text files (*.txt)")[0]
         if self.fileName:
+            print(self.fileName)
             self.containers = parseManifest(self.fileName)
             self.grid = Grid(self.containers)
             if self.containers == False:
@@ -380,7 +381,7 @@ class UI(QWidget):
 
     def endFunc(self):
         self.widgetStack.setCurrentIndex(4)
-        filename = writeOutboundManifest(self.containers)
+        filename = writeOutboundManifest(self.containers, self.fileName)
         #recovery.rfileUpdate(2, filename, [], [], [], self.moves, self.currMove)
 
 if __name__ == "__main__":
