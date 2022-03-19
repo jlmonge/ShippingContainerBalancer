@@ -41,6 +41,10 @@ class Grid(QTableWidget):
 
             self.setItem(self.ROW_SIZE-container[0][0]-1+1, container[0][1]-1, item)
 
+    def colorWhite(self):
+        for i in range(0, self.ROW_SIZE):
+            for j in range(0, self.COL_SIZE):
+                self.item(i, j).setBackground( QColor(0,0,0) )
 
     def onClick(self, item: QTableWidgetItem) -> None:
 
@@ -87,4 +91,3 @@ if __name__ == "__main__":
     window.show()
 
     sys.exit(app.exec_())
-

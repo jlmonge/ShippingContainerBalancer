@@ -72,6 +72,7 @@ class UI(QWidget):
         self.setFixedSize(self.width, self.height)
         self.onloadListNames = []
         self.onloadListWts = []
+        self.moves = []
         self.loadRScrollBox = QListWidget()
        
         # determine if program was unexpectedly shutdown by power outage
@@ -311,20 +312,23 @@ class UI(QWidget):
     Input: job type (0 for unload/offload, 1 for balance)
     '''
     def calcFunc(self, jobType, offload=None, onload=None):
+        self.grid.colorWhite()
         self.widgetStack.setCurrentIndex(2)
         self.progBar.reset()
+        if self.moves:
+            self.moves.clear()
         self.progBtn.setEnabled(False)
-        self.moves = []
         complete = False
         if jobType == 0: # offload/onload (from load.py)
-            moves, complete = load.solve(self.containers, offload, onload)
+            self.moves, complete = load.solve(self.containers, offload, onload)
             for move in moves:
                 self.moves.append( (move[0]), move[1] )
         else: # balance
             ship = Ship.Ship()
             ship.from_manifest(self.fileName)
-            solution = main.balance_ship(ship)
-            self.moves = solution.get_list_representation
+            solution = balance_ship(ship)
+            self.moves = solution.get_list_representation()
+        print(self.moves)
         for i in range(100):
             time.sleep(0.01)
             if complete != True and i < 99:
@@ -338,7 +342,7 @@ class UI(QWidget):
     def animFunc(self, cont):
         self.widgetStack.setCurrentIndex(3)
         self.currMove = 1
-        for move in self.moves: # move: tuple
+        for idx, move in enumerate(self.moves): # move: tuple
             if move[0] == None:
                 continue
             if self.animLayout.itemAtPosition(1, 0):
@@ -349,7 +353,7 @@ class UI(QWidget):
             self.animWidget = QWidget(self.animPage)
             self.animWidget.setLayout(self.animGrid)
             self.animWidget.setFixedWidth(self.width)
-            self.animDesc.setText("this op") #(f"Operation {}/{len(self.moves)}: {} to {}")
+            self.animDesc.setText(f"Operation {idx}/{len(self.moves)}: {move[0]} to {move[1]} [{move[2]} min]")
             self.animLayout.addWidget(self.animWidget, 1, 0)
 
     def completeFunc(self):
