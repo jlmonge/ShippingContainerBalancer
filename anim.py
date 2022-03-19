@@ -33,7 +33,8 @@ def getAnimationFrames(grid : Grid, initialPosition, finalPosition):
     grids = []
 
     initialPosition = (8 - initialPosition[0], initialPosition[1]-1)
-    finalPosition = (8 - finalPosition[0], finalPosition[1]-1)
+    finalPosition = (8 - min(8,finalPosition[0]), finalPosition[1]-1)
+
     currentPosition = [initialPosition[0], initialPosition[1]]
     current_row = currentPosition[0] 
     current_col = currentPosition[1]
