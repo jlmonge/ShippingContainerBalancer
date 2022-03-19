@@ -321,7 +321,7 @@ class UI(QWidget):
         complete = False
         if jobType == 0: # offload/onload (from load.py)
             self.moves, complete = load.solve(self.containers, offload, onload)
-            for move in moves:
+            for move in self.moves:
                 self.moves.append( (move[0]), move[1] )
         else: # balance
             ship = Ship.Ship()
